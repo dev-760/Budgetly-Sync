@@ -30,10 +30,10 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const visualThemes: Record<VisualThemeId, { primary: string; primaryLight: string }> = {
-  ocean: { primary: "#1A56DB", primaryLight: "#EAF0FF" },
-  violet: { primary: "#7C3AED", primaryLight: "#EDE9FE" },
-  sage: { primary: "#059669", primaryLight: "#D1FAE5" },
+export const visualThemes: Record<VisualThemeId, { primary: string; primaryLight: string; primaryLightDark: string }> = {
+  ocean: { primary: "#3B82F6", primaryLight: "#EAF0FF", primaryLightDark: "rgba(59, 130, 246, 0.1)" },
+  violet: { primary: "#7C3AED", primaryLight: "#EDE9FE", primaryLightDark: "rgba(124, 58, 237, 0.1)" },
+  sage: { primary: "#10B981", primaryLight: "#D1FAE5", primaryLightDark: "rgba(16, 185, 129, 0.1)" },
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -64,9 +64,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Apply visual theme CSS variables
     const theme = visualThemes[visualTheme];
     document.documentElement.style.setProperty("--primary", theme.primary);
-    document.documentElement.style.setProperty("--primary-light", theme.primaryLight);
+    
+    // Use dark mode background if in dark mode
+    const isDark = document.documentElement.classList.contains("dark") || colorScheme === "dark";
+    document.documentElement.style.setProperty("--primary-light", isDark ? theme.primaryLightDark : theme.primaryLight);
+    
     localStorage.setItem("visualTheme", visualTheme);
-  }, [visualTheme]);
+  }, [visualTheme, colorScheme]);
 
   const palette = {
     background: `var(--background)`,
