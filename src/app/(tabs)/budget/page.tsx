@@ -2,205 +2,131 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, PieChart, Wallet, ShoppingCart, Car, Home, Laptop, Heart, GraduationCap, ShoppingBag, Receipt, ChevronRight, Target } from 'lucide-react';
+import { Plus, Wallet, ChevronRight, PieChart, Landmark } from 'lucide-react';
+import { Card, EmptyState, ProgressBar, RoundIcon, SectionTitle } from '@/components/budget-ui';
+import { formatMoney } from '@/lib/budget-data';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
-import { formatMoney } from '@/lib/budget-data';
 import { cn } from '@/lib/utils';
 
-const getCategoryIcon = (id: string) => {
-  switch (id) {
-    case 'food': return ShoppingCart;
-    case 'transport': return Car;
-    case 'housing': return Home;
-    case 'entertainment': return Laptop;
-    case 'health': return Heart;
-    case 'education': return GraduationCap;
-    case 'shopping': return ShoppingBag;
-    default: return Receipt;
-  }
-};
-
-export default function BudgetPage() {
-  const router = useRouter();
-  const { palette } = useThemeContext();
+export default function BudgetScreen() {
   const { settings, budgets, transactions, finance, t, categoryName } = useBudget();
+  const { palette } = useThemeContext();
+  const router = useRouter();
   const language = settings.language;
-  const isFrench = language === 'fr';
+  const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
   const spending = transactions
     .filter((item) => item.kind === "expense")
-    .reduce<Record<string, number>>((sum, item) => ({
-      ...sum,
-      [item.categoryId]: (sum[item.categoryId] ?? 0) + item.amount
-    }), {});
-
-  const totalBudgetLimit = budgets.reduce((s, b) => s + b.limit, 0);
-  const totalSpent = budgets.reduce((s, b) => s + (spending[b.id] ?? 0), 0);
+    .reduce<Record<string, number>>((sum, item) => ({ ...sum, [item.categoryId]: (sum[item.categoryId] ?? 0) + item.amount }), {});
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="px-10 py-8 space-y-6">
-
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+      <div className="pt-3.5 pb-11">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-row items-center justify-between mb-[18px]">
           <div>
-            <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{t("budget")}</h1>
-            <p className="text-[14px] leading-[20px] text-[#434654]">{label("Monthly spending plan", "Plan de dépenses mensuel")}</p>
+            <h1 className="text-[28px] font-extrabold tracking-[-0.7px]" style={{ color: palette.foreground }}>{t("budget")}</h1>
+            <p className="text-[13px] mt-0.5" style={{ color: palette.muted }}>{t("monthlyPlan")}</p>
           </div>
-          <button
+          <button 
             onClick={() => router.push('/budget-edit')}
-            className="flex items-center gap-2 px-6 py-3 bg-[#003fb1] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
+            className="w-11 h-11 rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"
+            style={{ backgroundColor: palette.primary }}
           >
-            <Plus size={20} />
-            {label("Add Budget", "Ajouter un budget")}
+            <Plus size={22} color="white" />
           </button>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Column */}
-          <div className="col-span-12 xl:col-span-8 space-y-6">
-
-            {/* Safe to Spend Hero */}
-            <div className="bg-[#121c2a] rounded-xl p-6 shadow-md relative overflow-hidden">
-              <div className="absolute -right-16 -top-16 w-56 h-56 bg-[#003fb1]/20 rounded-full blur-3xl pointer-events-none"></div>
-              <div className="relative z-10 flex justify-between items-center">
-                <div>
-                  <p className="text-[11px] font-bold tracking-[0.05em] text-white/60 uppercase mb-2">{t("safeToSpend")}</p>
-                  <h2 className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-white tabular-nums">
-                    {formatMoney(finance.safeToSpend, language as any)}
-                  </h2>
-                  <p className="text-[14px] text-white/70 mt-2">
-                    {formatMoney(finance.dailySafeToSpend, language as any)} / {isFrench ? "jour" : "day"}
-                  </p>
-                </div>
-                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                  <Wallet size={28} className="text-white" />
-                </div>
-              </div>
-            </div>
-
-            {/* Budget Cards */}
-            {budgets.length === 0 ? (
-              <div className="bg-white rounded-xl p-12 shadow-sm border border-[#e5e7eb] text-center">
-                <PieChart size={48} className="text-[#c3c5d7] mx-auto mb-4" />
-                <h3 className="text-[18px] font-semibold text-[#191b23] mb-2">
-                  {isFrench ? "Ton premier budget" : "Your first budget"}
-                </h3>
-                <p className="text-[14px] text-[#434654] mb-6">
-                  {isFrench ? "Choisis une catégorie puis définis sa limite mensuelle." : "Choose a category, then set its monthly limit."}
-                </p>
-                <button
-                  onClick={() => router.push('/budget-edit')}
-                  className="px-6 py-3 bg-[#003fb1] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#1a56db] transition-colors"
-                >
-                  {isFrench ? "Créer un budget" : "Create budget"}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {budgets.map((item) => {
-                  const spent = spending[item.id] ?? 0;
-                  const ratio = item.limit ? spent / item.limit : 0;
-                  const over = spent > item.limit;
-                  const percentage = Math.min(ratio * 100, 100);
-                  const barColor = over ? '#ba1a1a' : ratio > 0.82 ? '#f59e0b' : item.color;
-                  const Icon = getCategoryIcon(item.id);
-
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => router.push(`/budget-edit?id=${item.id}`)}
-                      className="w-full bg-white rounded-xl p-5 shadow-sm border border-[#e5e7eb] text-left hover:border-[#003fb1]/30 transition-colors group"
-                    >
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: `${item.color}18` }}
-                          >
-                            <Icon size={20} style={{ color: item.color }} />
-                          </div>
-                          <div>
-                            <p className="text-[14px] font-semibold text-[#191b23]">{categoryName(item.id)}</p>
-                            <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] mt-0.5 tabular-nums">
-                              {formatMoney(spent, language as any)} {t("spent")}
-                            </p>
-                          </div>
-                        </div>
-                        <p className={cn(
-                          "text-[13px] tracking-[0.02em] font-semibold tabular-nums",
-                          over ? "text-[#ba1a1a]" : "text-[#006c49]"
-                        )}>
-                          {over
-                            ? `${formatMoney(spent - item.limit, language as any)} ${t("overBudget")}`
-                            : `${formatMoney(item.limit - spent, language as any)} ${t("remaining")}`
-                          }
-                        </p>
-                      </div>
-                      <div className="w-full bg-[#ededf8] h-2 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${percentage}%`,
-                            backgroundColor: barColor,
-                            boxShadow: over ? `0 0 8px ${barColor}` : 'none'
-                          }}
-                        ></div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        {/* Summary Card */}
+        <Card 
+          className="flex flex-row justify-between items-center p-5" 
+          style={{ backgroundColor: palette.foreground, borderColor: palette.foreground }}
+        >
+          <div>
+            <p className="text-white/70 text-[13px] font-bold">{t("safeToSpend")}</p>
+            <p className="text-white text-[29px] font-extrabold tracking-[-0.8px] mt-1.5">{formatMoney(finance.safeToSpend, language)}</p>
+            <p className="text-white/70 text-[12px] mt-1.5">{formatMoney(finance.dailySafeToSpend, language)} / {language === "fr" ? "jour" : "day"}</p>
           </div>
+          <RoundIcon icon={Wallet} size={54} color="white" background="rgba(255,255,255,0.16)" />
+        </Card>
 
-          {/* Right Column */}
-          <div className="col-span-12 xl:col-span-4 space-y-6">
+        <SectionTitle title={t("budgetHealth")} />
 
-            {/* Budget Summary */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
-              <h3 className="text-[18px] font-semibold text-[#191b23] mb-4">{label("Budget Summary", "Résumé du budget")}</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-[#434654]">{label("Total Budget", "Budget total")}</span>
-                  <span className="text-[14px] font-semibold text-[#191b23] tabular-nums">{formatMoney(totalBudgetLimit, language as any)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-[#434654]">{label("Total Spent", "Total dépensé")}</span>
-                  <span className="text-[14px] font-semibold text-[#ba1a1a] tabular-nums">{formatMoney(totalSpent, language as any)}</span>
-                </div>
-                <div className="h-px bg-[#e5e7eb]"></div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] font-semibold text-[#191b23]">{label("Remaining", "Restant")}</span>
-                  <span className="text-[14px] font-bold text-[#006c49] tabular-nums">{formatMoney(Math.max(totalBudgetLimit - totalSpent, 0), language as any)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Set Spending Limit Card */}
+        {/* Budget List */}
+        {budgets.length === 0 ? (
+          <Card className="pb-4">
+            <EmptyState
+              icon={PieChart}
+              title={language === "fr" ? "Ton premier budget" : "Your first budget"}
+              body={language === "fr" ? "Choisis une catégorie puis définis sa limite mensuelle." : "Choose a category, then set its monthly limit."}
+            />
             <button
-              onClick={() => router.push('/monthly-limit')}
-              className="w-full bg-[#f3f3fe] rounded-xl p-5 shadow-sm border border-[#e5e7eb] text-left hover:border-[#003fb1]/30 transition-colors group"
+              onClick={() => router.push('/budget-edit')}
+              className="mt-2 mx-auto h-[48px] px-6 rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"
+              style={{ backgroundColor: palette.primary }}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#003fb1]/10 flex items-center justify-center">
-                  <Target size={24} className="text-[#003fb1]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-[#191b23]">
-                    {isFrench ? "Définir une limite globale" : "Set a spending limit"}
-                  </p>
-                  <p className="text-[13px] text-[#434654] mt-1">
-                    {isFrench ? "Compare tes dépenses à une cible." : "Compare expenses with a target."}
-                  </p>
-                </div>
-                <ChevronRight size={20} className="text-[#003fb1]" />
-              </div>
+              <span className="text-white text-[14px] font-extrabold">
+                {language === "fr" ? "Créer un budget" : "Create budget"}
+              </span>
             </button>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {budgets.map((item) => {
+              const spent = spending[item.id] ?? 0;
+              const ratio = item.limit ? spent / item.limit : 0;
+              const over = spent > item.limit;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => router.push(`/budget-edit?id=${item.id}`)}
+                  className="rounded-[22px] border p-3.5 active:opacity-70 transition-opacity text-left"
+                  style={{ backgroundColor: palette.surface, borderColor: palette.border }}
+                >
+                  <div className="flex flex-row justify-between items-center mb-3.5">
+                    <div className="flex flex-row items-center gap-2.5 flex-1 min-w-0">
+                      <RoundIcon icon={PieChart} size={42} color={item.color} background={`${item.color}18`} />
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-extrabold truncate" style={{ color: palette.foreground }}>{categoryName(item.id)}</p>
+                        <p className="text-[12px] mt-[3px]" style={{ color: palette.muted }}>{formatMoney(spent, language)} {t("spent")}</p>
+                      </div>
+                    </div>
+                    <p className="text-[12px] font-extrabold text-right max-w-[100px]" style={{ color: over ? palette.error : palette.success }}>
+                      {over 
+                        ? `${formatMoney(spent - item.limit, language)} ${label("over", "dépassé")}`
+                        : `${formatMoney(item.limit - spent, language)} ${label("left", "restant")}`
+                      }
+                    </p>
+                  </div>
+                  <ProgressBar 
+                    value={ratio} 
+                    color={over ? palette.error : ratio > 0.82 ? palette.warning : item.color} 
+                  />
+                </button>
+              );
+            })}
           </div>
-        </div>
+        )}
+
+        {/* Spending Limit Card */}
+        <button
+          onClick={() => router.push('/monthly-limit')}
+          className="flex flex-row items-center gap-3.5 rounded-[22px] p-4 mt-5 mb-5 w-full active:opacity-70 transition-opacity text-left"
+          style={{ backgroundColor: '#EEF3FF' }}
+        >
+          <RoundIcon icon={Landmark} size={42} color={palette.primary} background="white" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[16px] font-extrabold" style={{ color: palette.primary }}>
+              {language === "fr" ? "Définir une limite globale" : "Set a spending limit"}
+            </p>
+            <p className="text-[13px] mt-1 leading-[18px]" style={{ color: '#5478D2' }}>
+              {language === "fr" ? "Compare tes dépenses à une cible mensuelle simple." : "Compare your expenses with one simple monthly target."}
+            </p>
+          </div>
+          <ChevronRight size={22} color={palette.primary} />
+        </button>
       </div>
     </div>
   );

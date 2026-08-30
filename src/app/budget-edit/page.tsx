@@ -2,154 +2,161 @@
 
 import React, { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X, Trash2, ShoppingCart, Car, Home, Laptop, Heart, GraduationCap, ShoppingBag, Receipt, MoreHorizontal } from 'lucide-react';
+import { X, Save, ShoppingCart, Car, Home, Laptop, Heart, GraduationCap, ShoppingBag, Receipt, MoreHorizontal } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
-import { categoryIds } from '@/lib/budget-data';
+import { budgetCategoryOptions, CategoryId } from '@/lib/budget-data';
+import { useThemeContext } from '@/lib/theme-provider';
 import { cn } from '@/lib/utils';
 
-const iconMap: Record<string, any> = {
-  food: ShoppingCart, transport: Car, housing: Home, entertainment: Laptop,
-  health: Heart, education: GraduationCap, shopping: ShoppingBag, other: MoreHorizontal
+const getLucideIcon = (id: string) => {
+  switch (id) {
+    case 'food': return ShoppingCart;
+    case 'transport': return Car;
+    case 'housing': return Home;
+    case 'entertainment': return Laptop;
+    case 'health': return Heart;
+    case 'education': return GraduationCap;
+    case 'shopping': return ShoppingBag;
+    default: return MoreHorizontal;
+  }
 };
-
-const colorOptions = [
-  "#003fb1", "#006c49", "#852b00", "#694100", 
-  "#ba1a1a", "#7A63D2", "#0ea5e9", "#14b8a6"
-];
 
 function BudgetEditContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const idParam = searchParams.get('id');
+  const fromOnboarding = searchParams.get('fromOnboarding') === 'true';
 
   const { settings, budgets, setBudget, t, categoryName } = useBudget();
-  const isFrench = settings.language === 'fr';
+  const { palette } = useThemeContext();
+  const language = settings.language;
+  const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
-  const existing = useMemo(() => budgets.find((item) => item.id === idParam), [idParam, budgets]);
-
-  const [categoryId, setCategoryId] = useState(existing?.id ?? "food");
-  const [limit, setLimitAmount] = useState(existing ? String(existing.limit) : "");
-  const [color, setColor] = useState(existing?.color ?? "#003fb1");
+  const existing = useMemo(() => budgets.find((item) => item.id === idParam), [budgets, idParam]);
+  const [selectedId, setSelectedId] = useState<CategoryId>(
+    existing?.id ?? (idParam as CategoryId | undefined) ?? budgetCategoryOptions[0].id
+  );
+  
+  const chosen = useMemo(() => 
+    existing ?? budgetCategoryOptions.find((item) => item.id === selectedId) ?? budgetCategoryOptions[0], 
+    [existing, selectedId]
+  );
+  
+  const [amount, setAmount] = useState(existing ? String(existing.limit) : "");
   const [error, setError] = useState("");
 
+  const close = () => {
+    if (fromOnboarding) router.replace("/budget");
+    else router.back();
+  };
+
   const save = () => {
-    const numLimit = Number(limit.replace(",", "."));
-    if (!numLimit || numLimit <= 0) { setError(label("Limit amount is required", "La limite est requise")); return; }
-
-    setBudget(categoryId, numLimit);
-    
-    router.back();
-  };
-
-  const remove = () => {
-    if (window.confirm(label("Delete this budget?", "Supprimer ce budget ?"))) {
-      setBudget(existing!.id, 0); // Setting limit to 0 logically removes it
-      router.back();
+    const value = Number(amount.replace(",", "."));
+    if (!value || value <= 0) { 
+      setError(t("amount")); 
+      return; 
     }
+    setBudget(chosen.id, value);
+    if (fromOnboarding) router.replace("/budget");
+    else router.back();
   };
+
+  const ChosenIcon = getLucideIcon(chosen.id);
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex items-start justify-center py-12 px-4">
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-background pt-safe overflow-hidden" style={{ backgroundColor: palette.background }}>
+      {/* Header */}
+      <div className="h-[62px] flex flex-row items-center justify-between px-5 shrink-0">
+        <button 
+          onClick={close}
+          className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-65 transition-opacity"
+          style={{ backgroundColor: palette.surface, borderColor: palette.border }}
+        >
+          <X size={22} color={palette.foreground} />
+        </button>
+        <span className="text-[16px] font-extrabold" style={{ color: palette.foreground }}>
+          {existing ? t("setBudget") : t("budget")}
+        </span>
+        <button 
+          onClick={save}
+          className="h-10 px-4 rounded-[14px] flex items-center justify-center active:opacity-65 transition-opacity"
+          style={{ backgroundColor: palette.primary }}
+        >
+          <span className="text-white text-[14px] font-extrabold">
+            {existing ? label("Save", "Enregistrer") : label("Set", "Définir")}
+          </span>
+        </button>
+      </div>
 
-        {/* Header */}
-        <div className="p-6 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9ff]">
-          <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">
-            {existing ? label("Edit Budget", "Modifier le budget") : label("Set Budget", "Définir un budget")}
-          </h2>
-          <div className="flex items-center gap-2">
-            {existing && (
-              <button onClick={remove} className="p-2 rounded-lg hover:bg-[#ffdad6] transition-colors">
-                <Trash2 size={20} className="text-[#ba1a1a]" />
-              </button>
-            )}
-            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
-              <X size={20} className="text-[#434654]" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-
-          {/* Limit Amount */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Monthly Limit", "Limite mensuelle")}</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={limit}
-                onChange={(e) => { setLimitAmount(e.target.value); setError(""); }}
-                placeholder="0"
-                className="flex-1 text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
-                autoFocus
-              />
-              <span className="text-[22px] font-semibold text-[#434654]">DH</span>
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="flex flex-col items-center pt-8 pb-[100px] px-5 max-w-[400px] mx-auto">
+          
+          <div className="flex flex-col items-center">
+            <div className="h-[70px] w-[70px] rounded-[25px] flex items-center justify-center bg-[#F1F5F9]">
+              <ChosenIcon size={28} color={chosen.color} />
             </div>
-            {error && <p className="text-[13px] text-[#ba1a1a] font-semibold mt-2">{error}</p>}
+            <span className="text-[24px] font-extrabold mt-[18px]" style={{ color: palette.foreground }}>
+              {categoryName(chosen.id)}
+            </span>
           </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Category", "Catégorie")}</label>
-            <div className="grid grid-cols-4 gap-2">
-              {categoryIds.map((id) => {
-                const Icon = iconMap[id] || Receipt;
-                // If not editing this specific budget, disable it if a budget already exists for it
-                const isTaken = !existing && budgets.some(b => b.id === id);
+          {!existing && (
+            <div className="w-full flex flex-row flex-wrap gap-[10px] mt-[22px]">
+              {budgetCategoryOptions.map((item) => {
+                const isSelected = selectedId === item.id;
+                const Icon = getLucideIcon(item.id);
                 return (
                   <button
-                    key={id}
-                    onClick={() => !isTaken && setCategoryId(id)}
-                    disabled={isTaken}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-lg border transition-all text-center",
-                      categoryId === id
-                        ? "bg-[#003fb1]/5 border-[#003fb1] ring-1 ring-[#003fb1]"
-                        : isTaken 
-                          ? "bg-[#f8f9ff] border-[#e5e7eb] opacity-50 cursor-not-allowed"
-                          : "bg-white border-[#e5e7eb] hover:border-[#003fb1]/30"
-                    )}
+                    key={item.id}
+                    onClick={() => setSelectedId(item.id)}
+                    className="w-[calc(33.333%-7px)] min-h-[74px] p-2.5 flex flex-col gap-1.5 rounded-2xl border-[1.5px] items-center justify-center active:opacity-65 transition-all"
+                    style={{ 
+                      backgroundColor: isSelected ? `${item.color}14` : palette.surface,
+                      borderColor: isSelected ? item.color : palette.border 
+                    }}
                   >
-                    <Icon size={20} className={categoryId === id ? "text-[#003fb1]" : "text-[#434654]"} />
-                    <span className={cn(
-                      "text-[11px] font-semibold",
-                      categoryId === id ? "text-[#003fb1]" : "text-[#434654]"
-                    )}>
-                      {categoryName(id)}
+                    <Icon size={17} color={isSelected ? item.color : palette.muted} />
+                    <span 
+                      className="text-[11px] font-bold text-center truncate w-full"
+                      style={{ color: isSelected ? item.color : palette.muted }}
+                    >
+                      {categoryName(item.id)}
                     </span>
                   </button>
                 );
               })}
             </div>
-          </div>
+          )}
 
-          {/* Color Picker */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Color", "Couleur")}</label>
-            <div className="flex flex-wrap gap-3">
-              {colorOptions.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className={cn(
-                    "w-10 h-10 rounded-full transition-transform",
-                    color === c ? "ring-2 ring-offset-2 ring-[#003fb1] scale-110" : "hover:scale-110"
-                  )}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
+          <div className="w-full flex flex-col items-center mt-7">
+            <span className="text-[15px] font-extrabold self-start ml-1" style={{ color: palette.foreground }}>
+              {t("budgetLimit")}
+            </span>
+            <div 
+              className="mt-4 w-full h-[80px] rounded-[22px] px-5 flex flex-row items-center justify-between border-[1.5px] border-transparent"
+              style={{ backgroundColor: palette.background }}
+            >
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => { setAmount(e.target.value); setError(""); }}
+                placeholder="0"
+                className="flex-1 bg-transparent border-none outline-none text-[36px] font-extrabold h-full text-left"
+                style={{ color: palette.foreground }}
+              />
+              <span className="font-extrabold text-[18px] ml-2.5" style={{ color: palette.primary }}>
+                DH
+              </span>
             </div>
+            {error && (
+              <span className="mt-[7px] text-[12px]" style={{ color: palette.error }}>
+                {error} is required.
+              </span>
+            )}
           </div>
-
-          {/* Save Button */}
-          <button
-            onClick={save}
-            className="w-full mt-4 py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
-          >
-            {existing ? label("Update Budget", "Mettre à jour le budget") : label("Save Budget", "Enregistrer le budget")}
-          </button>
+          
         </div>
       </div>
     </div>
@@ -158,7 +165,7 @@ function BudgetEditContent() {
 
 export default function BudgetEditPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8f9ff]" />}>
+    <Suspense fallback={<div />}>
       <BudgetEditContent />
     </Suspense>
   );

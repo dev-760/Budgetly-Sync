@@ -45,11 +45,12 @@ export function Card({ children, className, style }: { children: React.ReactNode
   const { palette } = useThemeContext();
   return (
     <div 
-      className={cn("rounded-xl p-4 transition-all duration-300", className)}
+      className={cn("p-4", className)}
       style={{ 
+        borderRadius: 22,
         backgroundColor: palette.surface, 
         border: `1px solid ${palette.border}`,
-        boxShadow: `0px 1px 2px rgba(0, 0, 0, 0.05), 0px 4px 6px -1px rgba(0, 0, 0, 0.02)`,
+        boxShadow: `0px 2px 8px rgba(0, 0, 0, 0.05)`,
         ...style 
       }}
     >
@@ -62,16 +63,19 @@ export function Card({ children, className, style }: { children: React.ReactNode
 export function SectionTitle({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
   const { palette } = useThemeContext();
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold" style={{ color: palette.foreground }}>
+    <div className="flex items-center justify-between mt-6 mb-3">
+      <h3 
+        className="text-[18px] font-bold tracking-[-0.015em]" 
+        style={{ color: palette.foreground }}
+      >
         {title}
       </h3>
       {action && onPress ? (
         <button
           onClick={onPress}
-          className="px-3 py-1 rounded-lg text-sm font-medium transition-colors hover:opacity-80"
+          className="px-3 py-1.5 rounded-xl text-[12px] font-extrabold active:opacity-65 transition-opacity"
           style={{ 
-            backgroundColor: palette.primaryLight,
+            backgroundColor: '#EEF3FF',
             color: palette.primary 
           }}
         >
@@ -136,49 +140,37 @@ export function MoneyText({
   style?: React.CSSProperties;
 }) {
   const { palette } = useThemeContext();
-  const formatted = formatMoney(amount, language);
+  const sign = type === "income" ? "positive" : type === "expense" ? "negative" : undefined;
+  const formatted = formatMoney(amount, language, sign);
   
   let color = palette.foreground;
-  let prefix = "";
-  
   if (type === "income") {
     color = palette.success;
-    prefix = "+";
   } else if (type === "expense") {
     color = palette.error;
-    prefix = "-";
   }
   
   return (
     <span 
-      className={cn("font-semibold tabular-nums tracking-[-0.02em]", className)}
-      style={{ 
-        color,
-        ...style 
-      }}
+      className={cn("font-extrabold tabular-nums", className)} 
+      style={{ color, ...style }}
     >
-      {prefix}{formatted}
+      {formatted}
     </span>
   );
 }
 
 // Empty state component
-export function EmptyState({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
+export function EmptyState({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
   const { palette } = useThemeContext();
-  
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div 
-        className="rounded-full p-4 mb-4"
-        style={{ backgroundColor: palette.primaryLight }}
-      >
-        <Icon size={32} color={palette.primary} />
-      </div>
-      <h3 className="text-lg font-semibold mb-2" style={{ color: palette.foreground }}>
+    <div className="flex flex-col items-center py-8 px-7 min-h-[120px]">
+      <RoundIcon icon={Icon} size={52} color={palette.primary} background="#EAF0FF" />
+      <h3 className="mt-4 text-[17px] font-bold text-center" style={{ color: palette.foreground }}>
         {title}
       </h3>
-      <p className="text-sm" style={{ color: palette.muted }}>
-        {description}
+      <p className="mt-2 text-[14px] leading-[22px] text-center max-w-[280px]" style={{ color: palette.muted }}>
+        {body}
       </p>
     </div>
   );

@@ -2,191 +2,130 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Landmark, Wallet, PiggyBank, Plus, Calendar, ArrowRightLeft, ChevronRight, Repeat } from 'lucide-react';
+import { PlusCircle, CalendarRange, Wallet, RefreshCw, CalendarDays, Receipt, Landmark, ArrowLeftRight, ChevronRight, Banknote, Lock } from 'lucide-react';
+import { Card, EmptyState, RoundIcon, SectionTitle } from '@/components/budget-ui';
+import { formatMoney } from '@/lib/budget-data';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
-import { formatMoney } from '@/lib/budget-data';
-import { FormattedDate } from '@/components/budget-ui';
 
-export default function FinancePage() {
-  const router = useRouter();
+export default function FinanceScreen() {
+  const { settings, recurring, buckets, finance } = useBudget();
   const { palette } = useThemeContext();
-  const { settings, buckets, recurring, finance, t } = useBudget();
-  const language = settings.language;
-  const isFrench = language === 'fr';
+  const router = useRouter();
+  const isFrench = settings.language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
+  const recurringIncome = recurring.filter((item) => item.kind === "income");
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="px-10 py-8 space-y-6">
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+      <div className="pt-2.5 pb-10">
+        <h1 className="text-[28px] font-extrabold tracking-[-0.7px] mt-3.5" style={{ color: palette.foreground }}>
+          {label("Finance board", "Vue financière")}
+        </h1>
+        <p className="text-[13px] mt-1 leading-[18px] max-w-[310px]" style={{ color: palette.muted }}>
+          {label("Everything you own, owe, and plan — kept on this device.", "Ce que tu possèdes, dois et prévois — conservé sur cet appareil.")}
+        </p>
 
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Finance Board", "Vue financière")}</h1>
-            <p className="text-[14px] leading-[20px] text-[#434654]">{label("Accounts & commitments", "Comptes et engagements")}</p>
-          </div>
-          <button
-            onClick={() => router.push('/finance-manage')}
-            className="flex items-center gap-2 px-6 py-3 bg-[#003fb1] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
+        {/* Net Worth Card */}
+        <div className="mt-5 rounded-[22px] p-5" style={{ backgroundColor: palette.foreground }}>
+          <p className="text-white/70 text-[13px] font-bold">{label("Net worth", "Patrimoine net")}</p>
+          <p className="text-white text-[36px] font-extrabold tracking-[-1px] mt-2 tabular-nums">{formatMoney(finance.netWorth, settings.language)}</p>
+          <p className="text-white/50 text-[12px] mt-2">{label("Buckets + receivables − liabilities", "Comptes + créances − dettes")}</p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex flex-row gap-2.5 mt-4">
+          <button 
+            onClick={() => router.push('/transaction?kind=income')}
+            className="flex-1 h-[44px] rounded-2xl flex flex-row items-center justify-center gap-1.5 active:opacity-70 transition-opacity"
+            style={{ backgroundColor: palette.primary }}
           >
-            {label("Manage Finances", "Gérer les finances")}
+            <PlusCircle size={19} color="white" />
+            <span className="text-white text-[13px] font-extrabold">{label("Record income", "Ajouter un revenu")}</span>
+          </button>
+          <button 
+            onClick={() => router.push('/finance-manage?mode=income')}
+            className="flex-1 h-[44px] rounded-2xl border flex flex-row items-center justify-center gap-1.5 active:opacity-70 transition-opacity"
+            style={{ backgroundColor: palette.surface, borderColor: palette.border }}
+          >
+            <CalendarRange size={19} color={palette.primary} />
+            <span className="text-[13px] font-extrabold" style={{ color: palette.primary }}>{label("Plan income", "Planifier le revenu")}</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Column */}
-          <div className="col-span-12 xl:col-span-8 space-y-6">
-
-            {/* Net Worth Hero */}
-            <div className="bg-[#121c2a] rounded-xl p-8 shadow-md relative overflow-hidden">
-              <div className="absolute -right-16 -top-16 w-56 h-56 bg-[#003fb1]/20 rounded-full blur-3xl pointer-events-none"></div>
-              <div className="relative z-10">
-                <p className="text-[11px] font-bold tracking-[0.05em] text-white/60 uppercase mb-2 flex items-center gap-2">
-                  <Landmark size={16} className="text-[#003fb1]" />
-                  {label("Net Worth", "Valeur nette")}
-                </p>
-                <h2 className="text-[44px] leading-[52px] tracking-[-0.02em] font-bold text-white tabular-nums">
-                  {formatMoney(finance.netWorth, language as any)}
-                </h2>
-
-                <div className="flex gap-4 mt-6">
-                  {buckets.map(bucket => (
-                    <div key={bucket.id} className="flex-1 bg-white/10 rounded-xl p-4 border border-white/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        {bucket.id === 'cash' ? <PiggyBank size={18} className="text-white/70" /> : <Wallet size={18} className="text-white/70" />}
-                        <span className="text-[11px] font-bold tracking-[0.05em] text-white/60 uppercase">
-                          {bucket.id === 'cash' ? t('cash') : t('card')}
-                        </span>
-                      </div>
-                      <p className="text-[22px] leading-[28px] font-bold text-white tabular-nums tracking-[-0.01em]">
-                        {formatMoney(bucket.balance, language as any)}
-                      </p>
-                    </div>
-                  ))}
+        {/* Monthly Income */}
+        <SectionTitle title={label("Monthly income", "Revenu mensuel")} action={label("Calendar", "Calendrier")} onPress={() => router.push('/income-calendar')} />
+        <Card className="p-0 overflow-hidden">
+          {recurringIncome.length ? (
+            <div className="flex flex-col">
+              {recurringIncome.map((item) => (
+                <div key={item.id} className="flex flex-row items-center gap-3 px-3.5 py-3 border-b last:border-b-0" style={{ borderColor: palette.border }}>
+                  <RoundIcon icon={Banknote} size={36} color={palette.success} background="#E7F7F1" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold truncate" style={{ color: palette.foreground }}>{item.title}</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: palette.muted }}>
+                      {label("Next payday", "Prochain versement")} · {item.nextDueDate}
+                    </p>
+                  </div>
+                  <span className="text-[14px] font-extrabold tabular-nums" style={{ color: palette.success }}>
+                    {formatMoney(item.amount, settings.language)}
+                  </span>
                 </div>
-              </div>
+              ))}
             </div>
+          ) : (
+            <EmptyState 
+              icon={Banknote}
+              title={label("Plan your monthly income", "Planifie ton revenu mensuel")}
+              body={label("Add your salary or allowance and its next payday.", "Ajoute ton salaire ou allocation et son prochain versement.")}
+            />
+          )}
+        </Card>
 
-            {/* Recurring Income Schedule */}
-            <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-              <div className="p-6 border-b border-[#e5e7eb] flex justify-between items-center bg-[#f8f9ff]">
-                <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">
-                  {label("Recurring Payments", "Paiements récurrents")}
-                </h2>
-                <span className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">
-                  {recurring.length} {label("items", "éléments")}
-                </span>
-              </div>
-              {recurring.length === 0 ? (
-                <div className="p-12 text-center">
-                  <Repeat size={40} className="text-[#c3c5d7] mx-auto mb-3" />
-                  <p className="text-[14px] text-[#434654]">{label("No recurring items yet", "Aucun élément récurrent")}</p>
-                </div>
-              ) : (
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-[#f3f3fe] border-b border-[#e5e7eb]">
-                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">{label("Name", "Nom")}</th>
-                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">{label("Next Due", "Prochaine échéance")}</th>
-                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase text-right">{label("Amount", "Montant")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recurring.map((item, i) => (
-                      <tr key={item.id} className={i !== recurring.length - 1 ? "border-b border-[#e5e7eb]" : ""}>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-[#f59e0b]/10 flex items-center justify-center">
-                              <Repeat size={16} className="text-[#f59e0b]" />
-                            </div>
-                            <span className="text-[14px] font-medium text-[#191b23]">{item.title}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-[14px] text-[#434654]">
-                          <FormattedDate date={item.nextDueDate} language={language as any} />
-                        </td>
-                        <td className="py-4 px-6 text-right text-[14px] font-semibold text-[#191b23] tabular-nums">
-                          {formatMoney(item.amount, language as any)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="col-span-12 xl:col-span-4 space-y-4">
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
-              <h3 className="text-[18px] font-semibold text-[#191b23] mb-4">{label("Quick Actions", "Actions rapides")}</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => router.push('/transaction?kind=income')}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#006c49]/5 hover:bg-[#006c49]/10 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[#006c49]/10 flex items-center justify-center">
-                    <Plus size={20} className="text-[#006c49]" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#191b23]">{label("Record Income", "Enregistrer un revenu")}</p>
-                    <p className="text-[11px] text-[#434654]">{label("Add salary, freelance, etc.", "Salaire, freelance, etc.")}</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => router.push('/income-calendar')}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#003fb1]/5 hover:bg-[#003fb1]/10 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[#003fb1]/10 flex items-center justify-center">
-                    <Calendar size={20} className="text-[#003fb1]" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#191b23]">{label("Plan Income", "Planifier les revenus")}</p>
-                    <p className="text-[11px] text-[#434654]">{label("View income calendar", "Calendrier des revenus")}</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => router.push('/finance-manage')}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#ededf8] hover:bg-[#e2e1ed] transition-colors text-left"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[#003fb1]/10 flex items-center justify-center">
-                    <ArrowRightLeft size={20} className="text-[#003fb1]" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#191b23]">{label("Transfer Funds", "Transférer des fonds")}</p>
-                    <p className="text-[11px] text-[#434654]">{label("Between accounts", "Entre les comptes")}</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Monthly Summary */}
-            <div className="bg-[#f3f3fe] rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
-              <h3 className="text-[14px] font-semibold text-[#191b23] mb-4">{label("This Month", "Ce mois-ci")}</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-[14px] text-[#434654]">{label("Income", "Revenus")}</span>
-                  <span className="text-[14px] font-semibold text-[#006c49] tabular-nums">{formatMoney(finance.income, language as any)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[14px] text-[#434654]">{label("Expenses", "Dépenses")}</span>
-                  <span className="text-[14px] font-semibold text-[#ba1a1a] tabular-nums">{formatMoney(finance.expenses, language as any)}</span>
-                </div>
-                <div className="h-px bg-[#e5e7eb]"></div>
-                <div className="flex justify-between">
-                  <span className="text-[14px] font-semibold text-[#191b23]">{label("Savings", "Épargne")}</span>
-                  <span className="text-[14px] font-bold text-[#006c49] tabular-nums">{formatMoney(finance.income - finance.expenses, language as any)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Buckets */}
+        <SectionTitle title={label("Buckets", "Comptes")} action={label("Manage", "Gérer")} onPress={() => router.push('/finance-manage?mode=transfer')} />
+        <div className="grid grid-cols-2 gap-3">
+          {buckets.map((bucket) => (
+            <Card key={bucket.id} className="p-3.5 flex flex-col gap-2.5">
+              <RoundIcon icon={Wallet} size={35} color={bucket.color} background={bucket.id === "cash" ? "#E7F7F1" : "#EAF0FF"} />
+              <p className="text-[12px] font-bold" style={{ color: palette.muted }}>{bucket.name}</p>
+              <p className="text-[17px] font-extrabold tabular-nums" style={{ color: palette.foreground }}>
+                {formatMoney(bucket.balance, settings.language)}
+              </p>
+            </Card>
+          ))}
         </div>
+
+        {/* Commitments */}
+        <SectionTitle title={label("Commitments", "Engagements")} action={label("Manage", "Gérer")} onPress={() => router.push('/finance-manage?mode=subscription')} />
+        <Card className="p-0 overflow-hidden">
+          <LineItem icon={RefreshCw} color={palette.warning} title={label("Subscriptions", "Abonnements")} value={formatMoney(finance.subscriptionTotal, settings.language)} borderColor={palette.border} />
+          <LineItem icon={CalendarDays} color={palette.error} title={label("Upcoming expenses", "Dépenses à venir")} value={formatMoney(finance.upcomingTotal, settings.language)} borderColor={palette.border} />
+          <LineItem icon={Receipt} color={palette.foreground} title={label("Liabilities", "Dettes")} value={formatMoney(finance.liabilities, settings.language)} borderColor={palette.border} noBorder />
+        </Card>
+
+        {/* Loans */}
+        <SectionTitle title={label("Money out and back", "Argent prêté et à recevoir")} action={label("Manage", "Gérer")} onPress={() => router.push('/finance-manage?mode=loan')} />
+        <Card className="p-0 overflow-hidden">
+          <LineItem icon={Landmark} color={palette.success} title={label("Loans receivable", "Prêts à recevoir")} value={formatMoney(finance.loansReceivable, settings.language)} borderColor={palette.border} />
+          <LineItem icon={ArrowLeftRight} color={palette.primary} title={label("Lent to others", "Prêté à d'autres")} value={formatMoney(finance.lentOutstanding, settings.language)} borderColor={palette.border} noBorder />
+        </Card>
+
+        <p className="text-[11px] mt-6 text-center leading-[17px]" style={{ color: palette.muted }}>
+          <Lock size={11} className="inline mr-1" />
+          {label("Private by default: this board is stored locally on your device.", "Privé par défaut : cette vue est conservée localement sur ton appareil.")}
+        </p>
       </div>
+    </div>
+  );
+}
+
+function LineItem({ icon: Icon, color, title, value, borderColor, noBorder }: { icon: any; color: string; title: string; value: string; borderColor: string; noBorder?: boolean }) {
+  return (
+    <div className={`flex flex-row items-center gap-3 px-3.5 py-3 ${noBorder ? '' : 'border-b border-dashed'}`} style={{ borderColor }}>
+      <RoundIcon icon={Icon} size={34} color={color} background="var(--color-background)" />
+      <span className="flex-1 text-[14px] font-bold" style={{ color: 'var(--color-foreground)' }}>{title}</span>
+      <span className="text-[14px] font-extrabold tabular-nums" style={{ color: 'var(--color-foreground)' }}>{value}</span>
     </div>
   );
 }

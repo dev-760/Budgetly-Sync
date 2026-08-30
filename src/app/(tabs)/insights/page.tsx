@@ -1,279 +1,199 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, CheckCircle, TrendingDown, TrendingUp, Utensils, Fuel } from 'lucide-react';
+import { TrendingUp, TrendingDown, CalendarRange, Flag, ChevronRight, Lightbulb } from 'lucide-react';
+import { Card, RoundIcon, SectionTitle } from '@/components/budget-ui';
+import { formatMoney } from '@/lib/budget-data';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
-import { formatMoney } from '@/lib/budget-data';
-import { cn } from '@/lib/utils';
 
-export default function InsightsPage() {
-  const router = useRouter();
+const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const monthTotal = (transactions: { kind: "income" | "expense"; amount: number; date: string }[], year: number, month: number, kind: "income" | "expense") =>
+  transactions.filter((item) => { const d = new Date(item.date); return d.getFullYear()===year && d.getMonth()===month && item.kind===kind; }).reduce((sum, item) => sum + item.amount, 0);
+const percentChange = (current: number, previous: number) => previous > 0 ? Math.round(((current - previous) / previous) * 100) : null;
+
+export default function InsightsScreen() {
+  const { settings, transactions, goals, categoryName, finance } = useBudget();
   const { palette } = useThemeContext();
-  const { settings, transactions, finance, categoryName } = useBudget();
+  const router = useRouter();
   const language = settings.language;
-  const isFrench = language === 'fr';
+  const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
+  const now = new Date();
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const thisMonth = transactions.filter((item) => { const d = new Date(item.date); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); });
+  const income = thisMonth.filter((item) => item.kind==="income").reduce((sum, item) => sum + item.amount, 0);
+  const spending = thisMonth.filter((item) => item.kind==="expense").reduce((sum, item) => sum + item.amount, 0);
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevIncome = monthTotal(transactions, prevDate.getFullYear(), prevDate.getMonth(), "income");
+  const prevSpending = monthTotal(transactions, prevDate.getFullYear(), prevDate.getMonth(), "expense");
+  const prevNet = prevIncome - prevSpending;
+  const net = income - spending;
+  const totalFlow = income + spending;
+  const incomeShare = totalFlow > 0 ? Math.round((income / totalFlow) * 100) : 50;
+
+  const categoryTotals = thisMonth.filter((item) => item.kind==="expense").reduce<Record<string, number>>((sum, item) => ({ ...sum, [item.categoryId]: (sum[item.categoryId] ?? 0) + item.amount }), {});
+  const categories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const categoryMax = Math.max(...categories.map(([, amount]) => amount), 1);
+  const accentColors = [palette.primary, palette.success, palette.warning, "#7A63D2"];
+
+  const weekly = Array.from({ length: 7 }, (_, i) => {
+    const date = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - i)));
+    const nextDate = new Date(date); nextDate.setDate(date.getDate() + 1);
+    const amount = transactions.filter((item) => item.kind==="expense" && new Date(item.date) >= date && new Date(item.date) < nextDate).reduce((sum, item) => sum + item.amount, 0);
+    const day = new Intl.DateTimeFormat(isFrench ? "fr-MA" : "en-US", { weekday: "narrow" }).format(date);
+    return { amount, day };
+  });
+  const weeklyMax = Math.max(...weekly.map((item) => item.amount), 1);
+  const top = categories[0];
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="px-10 py-8 space-y-6">
-        
-        {/* Top Stats Row */}
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-3 bg-[#f3f3fe] rounded-xl p-6 shadow-sm">
-            <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Total Spent (MTD)", "Dépenses (ce mois-ci)")}</p>
-            <p className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23] mb-1">{formatMoney(finance.expenses, language as any)}</p>
-            <div className="flex items-center gap-1 text-[#4edea3]">
-              <ArrowDown size={16} />
-              <span className="text-[13px] tracking-[0.02em] font-semibold">{label("12% vs last month", "-12% par rapport au mois dernier")}</span>
-            </div>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+      <div className="pt-3.5 pb-7">
+        <div className="flex flex-row justify-between items-start">
+          <div>
+            <h1 className="text-[27px] font-extrabold tracking-[-0.8px]" style={{ color: palette.foreground }}>{label("Monthly dashboard", "Tableau mensuel")}</h1>
+            <p className="text-[12px] mt-1.5" style={{ color: palette.muted }}>{label("Your money story, based on this device.", "Ton aperçu, basé sur cet appareil.")}</p>
           </div>
-          
-          <div className="col-span-12 lg:col-span-3 bg-[#f3f3fe] rounded-xl p-6 shadow-sm">
-            <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Avg. Daily Spend", "Dépense moy. par jour")}</p>
-            <p className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23] mb-1">{formatMoney(Math.max(finance.expenses / new Date().getDate(), 0), language as any)}</p>
-            <div className="flex items-center gap-1 text-[#ba1a1a]">
-              <ArrowUp size={16} />
-              <span className="text-[13px] tracking-[0.02em] font-semibold">{label("5% vs last month", "+5% par rapport au mois dernier")}</span>
-            </div>
-          </div>
-          
-          <div className="col-span-12 lg:col-span-3 bg-[#f3f3fe] rounded-xl p-6 shadow-sm flex flex-col justify-center">
-            <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Largest Transaction", "Transaction la plus élevée")}</p>
-            <p className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23] mb-1">
-              {transactions.length > 0 ? formatMoney(Math.max(...transactions.filter(t => t.kind === 'expense').map(t => t.amount)), language as any) : '-'}
-            </p>
-            <p className="text-[14px] leading-[20px] text-[#434654] truncate">
-              {transactions.filter(t => t.kind === 'expense').sort((a, b) => b.amount - a.amount)[0]?.title || '-'}
-            </p>
-          </div>
-          
-          <div className="col-span-12 lg:col-span-3 bg-[#003fb1] rounded-xl p-6 shadow-md text-white relative overflow-hidden flex flex-col justify-center">
-            <div className="relative z-10">
-              <p className="text-[11px] font-bold tracking-[0.05em] text-white/80 uppercase mb-2">{label("Budget Health", "Santé du Budget")}</p>
-              <p className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold mb-1">{label("Good", "Bonne")}</p>
-              <p className="text-[14px] leading-[20px] text-white/90">{label("On track to save this month.", "En bonne voie pour économiser ce mois-ci.")}</p>
-            </div>
-            <CheckCircle className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10" strokeWidth={1} />
+          <div className="flex flex-row items-center gap-1.5 rounded-xl px-2.5 py-[7px]" style={{ backgroundColor: "#EAF0FF" }}>
+            <CalendarRange size={16} color={palette.primary} />
+            <span className="text-[11px] font-bold" style={{ color: palette.primary }}>{label("This month", "Ce mois-ci")}</span>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="grid grid-cols-12 gap-6">
-          
-          {/* Spending by Category */}
-          <div className="col-span-12 xl:col-span-8 bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Spending by Category", "Dépenses par catégorie")}</h2>
-              <div className="flex gap-2">
-                <button className="px-3 py-1 bg-[#ededf8] rounded-lg text-[11px] font-bold tracking-[0.05em] text-[#434654] hover:bg-[#e2e1ed] transition-colors">{label("This Month", "Ce Mois")}</button>
-                <button className="px-3 py-1 bg-transparent rounded-lg text-[11px] font-bold tracking-[0.05em] text-[#434654] hover:bg-[#ededf8] transition-colors">{label("Last 3 Months", "3 Derniers Mois")}</button>
-              </div>
+        <Card className="mt-[18px] p-5" style={{ backgroundColor: palette.foreground, borderColor: palette.foreground, borderRadius: 23 }}>
+          <div className="flex flex-row justify-between">
+            <div>
+              <p className="text-[#BFD0FF] text-[12px] font-bold">{label("Monthly balance", "Solde mensuel")}</p>
+              <p className={`text-[34px] leading-[42px] font-extrabold mt-2 tabular-nums ${net >= 0 ? "text-white" : "text-[#FFD8D8]"}`}>
+                {formatMoney(Math.abs(net), language)}
+              </p>
+              <p className="text-[#DCE6FF] text-[12px] mt-1.5">
+                {net >= 0 ? label("You earned more than you spent.", "Tu as gagné plus que tu as dépensé.") : label("Spending is above income this month.", "Les dépenses dépassent les revenus ce mois-ci.")}
+              </p>
             </div>
-            
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Donut Chart */}
-              <div className="relative w-64 h-64 flex-shrink-0">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle className="text-[#ededf8]" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" strokeWidth="15"></circle>
-                  <circle 
-                    className="text-[#003fb1] transition-all duration-1000 ease-out" 
-                    cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" 
-                    strokeDasharray="251.2" strokeDashoffset={mounted ? "163.28" : "251.2"} 
-                    strokeLinecap="round" strokeWidth="15"
-                  ></circle>
-                  <circle 
-                    className="text-[#006c49] transition-all duration-1000 ease-out delay-100" 
-                    cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" 
-                    strokeDasharray="251.2" strokeDashoffset={mounted ? "188.4" : "251.2"} 
-                    strokeLinecap="round" strokeWidth="15" transform="rotate(126, 50, 50)"
-                  ></circle>
-                  <circle 
-                    className="text-[#852b00] transition-all duration-1000 ease-out delay-200" 
-                    cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" 
-                    strokeDasharray="251.2" strokeDashoffset={mounted ? "200.96" : "251.2"} 
-                    strokeLinecap="round" strokeWidth="15" transform="rotate(216, 50, 50)"
-                  ></circle>
-                  <circle 
-                    className="text-[#f59e0b] transition-all duration-1000 ease-out delay-300" 
-                    cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" 
-                    strokeDasharray="251.2" strokeDashoffset={mounted ? "200.96" : "251.2"} 
-                    strokeLinecap="round" strokeWidth="15" transform="rotate(288, 50, 50)"
-                  ></circle>
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">{label("Total", "Total")}</span>
-                  <span className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{formatMoney(finance.expenses, language as any)}</span>
-                </div>
-              </div>
-              
-              {/* Detailed Legend */}
-              <div className="flex-1 w-full space-y-4">
-                <div className="group flex items-center justify-between p-3 rounded-lg hover:bg-[#ededf8] transition-colors cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-[#003fb1]"></div>
-                    <div>
-                      <p className="text-[13px] tracking-[0.02em] font-semibold text-[#191b23]">{label("Housing & Utilities", "Logement")}</p>
-                      <p className="text-[14px] leading-[20px] text-[#434654]">{label("Rent, Internet, Electricity", "Loyer, Internet")}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[14px] leading-[20px] font-medium text-[#191b23] tabular-nums">{formatMoney(finance.expenses * 0.35, language as any)}</p>
-                    <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654]">35.0%</p>
-                  </div>
-                </div>
-                
-                <div className="group flex items-center justify-between p-3 rounded-lg hover:bg-[#ededf8] transition-colors cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-[#006c49]"></div>
-                    <div>
-                      <p className="text-[13px] tracking-[0.02em] font-semibold text-[#191b23]">{label("Food & Dining", "Nourriture")}</p>
-                      <p className="text-[14px] leading-[20px] text-[#434654]">{label("Groceries, Restaurants", "Épicerie, Restaurants")}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[14px] leading-[20px] font-medium text-[#191b23] tabular-nums">{formatMoney(finance.expenses * 0.25, language as any)}</p>
-                    <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654]">25.0%</p>
-                  </div>
-                </div>
-
-                <div className="group flex items-center justify-between p-3 rounded-lg hover:bg-[#ededf8] transition-colors cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-[#852b00]"></div>
-                    <div>
-                      <p className="text-[13px] tracking-[0.02em] font-semibold text-[#191b23]">{label("Transportation", "Transport")}</p>
-                      <p className="text-[14px] leading-[20px] text-[#434654]">{label("Gas, Transit", "Carburant, Transport en commun")}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[14px] leading-[20px] font-medium text-[#191b23] tabular-nums">{formatMoney(finance.expenses * 0.20, language as any)}</p>
-                    <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654]">20.0%</p>
-                  </div>
-                </div>
-              </div>
+            <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center bg-white/[0.14]">
+              {net >= 0 ? <TrendingUp size={26} color="white" /> : <TrendingDown size={26} color="white" />}
             </div>
           </div>
-          
-          {/* Top Changers */}
-          <div className="col-span-12 xl:col-span-4 bg-white rounded-xl p-6 shadow-sm flex flex-col border border-[#e5e7eb]">
-            <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23] mb-6">{label("Biggest Changes", "Plus grands changements")}</h2>
-            <div className="flex-1 space-y-4">
-              
-              <div className="p-4 rounded-xl bg-[#f3f3fe] flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#ffdad6] text-[#93000a] flex items-center justify-center">
-                    <Utensils size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[13px] tracking-[0.02em] font-semibold text-[#191b23]">{label("Dining Out", "Restaurants")}</p>
-                    <p className="text-[14px] leading-[20px] text-[#434654]">{label(" this month", "450 DH ce mois-ci")}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[14px] leading-[20px] font-medium text-[#ba1a1a] tabular-nums">+</p>
-                  <p className="text-[11px] font-bold tracking-[0.05em] text-[#ba1a1a] flex items-center justify-end gap-1">
-                    <TrendingUp size={14} /> 36%
-                  </p>
-                </div>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#f3f3fe] flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#6cf8bb] text-[#00714d] flex items-center justify-center">
-                    <Fuel size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[13px] tracking-[0.02em] font-semibold text-[#191b23]">{label("Fuel", "Carburant")}</p>
-                    <p className="text-[14px] leading-[20px] text-[#434654]">{label(" this month", "180 DH ce mois-ci")}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[14px] leading-[20px] font-medium text-[#006c49] tabular-nums">-</p>
-                  <p className="text-[11px] font-bold tracking-[0.05em] text-[#006c49] flex items-center justify-end gap-1">
-                    <TrendingDown size={14} /> 20%
-                  </p>
-                </div>
-              </div>
+          <div className="mt-[18px] pt-3.5 border-t border-white/20 flex flex-row justify-between">
+            <span className="text-[#BFD0FF] text-[12px] font-bold">{label("Safe to spend", "Reste à dépenser")}</span>
+            <span className="text-white text-[13px] font-extrabold">{formatMoney(finance.safeToSpend, language)}</span>
+          </div>
+        </Card>
 
+        <SectionTitle title={label("Income & spending", "Revenus et dépenses")} />
+        <Card className="flex flex-row items-center gap-4 p-4">
+          <div className="relative w-[108px] h-[108px]">
+            <svg width="108" height="108" viewBox="0 0 108 108">
+              <circle cx="54" cy="54" r="43" stroke="#FDEBDC" strokeWidth="13" fill="transparent" />
+              <circle cx="54" cy="54" r="43" stroke={palette.success} strokeWidth="13" fill="transparent" strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 43 * incomeShare / 100} ${2 * Math.PI * 43}`}
+                transform="rotate(-90 54 54)" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[10px] font-bold" style={{ color: palette.muted }}>{label("Inflow", "Entrées")}</span>
+              <span className="text-[19px] font-extrabold mt-0.5" style={{ color: palette.foreground }}>{incomeShare}%</span>
             </div>
-            <button className="mt-4 w-full py-3 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#191b23] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors">
-              {label("View All Categories", "Toutes les catégories")}
+          </div>
+          <div className="flex-1 flex flex-col gap-2.5">
+            <LegendRow color={palette.success} label={label("Income", "Revenus") } value={formatMoney(income, language)} muted={palette.muted} fg={palette.foreground} />
+            <LegendRow color={palette.error} label={label("Spending", "Dépenses") } value={formatMoney(spending, language)} muted={palette.muted} fg={palette.foreground} />
+            <div className="pt-2.5 mt-0.5 border-t flex flex-row justify-between" style={{ borderColor: palette.border }}>
+              <span className="text-[12px] font-bold" style={{ color: palette.muted }}>{label("Net", "Net")}</span>
+              <span className="text-[12px] font-extrabold" style={{ color: net >= 0 ? palette.success : palette.error }}>
+                {net >= 0 ? "+" : "-" }{formatMoney(Math.abs(net), language)}
+              </span>
+            </div>
+          </div>
+        </Card>
+
+        <SectionTitle title={label("Compared with last month", "Comparé au mois dernier")} />
+        <Card className="p-4">
+          {prevIncome || prevSpending ? (
+            <div className="flex flex-row justify-between gap-2">
+              <CompareMetric label={label("Income", "Revenus")} value={formatMoney(income, language)} change={percentChange(income, prevIncome)} positive fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
+              <CompareMetric label={label("Spending", "Dépenses")} value={formatMoney(spending, language)} change={percentChange(spending, prevSpending)} positive={false} fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
+              <CompareMetric label={label("Net", "Net")} value={formatMoney(Math.abs(net), language)} change={percentChange(net, prevNet)} positive={net >= prevNet} fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
+            </div>
+          ) : (
+            <p className="text-[13px] leading-[18px] text-center py-3.5" style={{ color: palette.muted }}>
+              {label("Add entries next month to unlock your month-to-month comparison.", "Ajoute des opérations le mois prochain pour débloquer la comparaison mensuelle.")}
+            </p>
+          )}
+        </Card>
+
+        <SectionTitle title={label("Last 7 days", "7 derniers jours")} />
+        <Card>
+          <div className="flex flex-row justify-between mb-2">
+            <span className="text-[12px] font-bold" style={{ color: palette.muted }}>{label("Daily spending", "Dépenses quotidiennes")}</span>
+            <span className="text-[12px] font-extrabold" style={{ color: palette.foreground }}>{formatMoney(weekly.reduce((s, i) => s + i.amount, 0), language)}</span>
+          </div>
+          <div className="h-[142px] flex flex-row items-end justify-between px-[3px]">
+            {weekly.map((item, i) => (
+              <div key={`${item.day}-${i}`} className="flex flex-col items-center gap-[7px] w-7">
+                <div className="w-[18px] rounded-full" style={{ height: Math.max(item.amount ? 12 : 4, 104 * (item.amount / weeklyMax)), backgroundColor: i === 6 ? palette.primary : "#BFD0FF" }} />
+                <span className="text-[10px] font-extrabold" style={{ color: palette.muted }}>{item.day}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] mt-3" style={{ color: palette.muted }}>{label("The latest day is highlighted in blue.", "Le dernier jour est en bleu.")}</p>
+        </Card>
+
+        <SectionTitle title={label("Where your money went", "Répartition des dépenses")} />
+        <Card>
+          {categories.length ? categories.map(([id, amount], i) => (
+            <button key={id} onClick={() => router.push(`/transactions?category=${id}`)} className="w-full mb-4 last:mb-0 active:opacity-70 transition-opacity text-left">
+              <div className="flex flex-row items-center gap-[7px]">
+                <div className="w-[9px] h-[9px] rounded-full" style={{ backgroundColor: accentColors[i] }} />
+                <span className="flex-1 text-[13px] font-bold" style={{ color: palette.foreground }}>{categoryName(id as any)}</span>
+                <ChevronRight size={16} color={palette.muted} />
+              </div>
+              <span className="text-[12px] font-extrabold" style={{ color: palette.muted }}>{formatMoney(amount, language)}</span>
+              <div className="h-[7px] rounded-[5px] mt-2 overflow-hidden" style={{ backgroundColor: "#EEF1F7" }}>
+                <div className="h-full rounded-[5px]" style={{ width: `${Math.max(5, (amount / categoryMax) * 100)}%`, backgroundColor: accentColors[i] }} />
+              </div>
             </button>
-          </div>
-        </div>
+          )) : (
+            <p className="text-[13px] leading-[18px] text-center py-3.5" style={{ color: palette.muted }}>
+              {label("Add an expense to see your category mix.", "Ajoute une dépense pour voir la répartition.")}
+            </p>
+          )}
+        </Card>
 
-        {/* Second Row Analytics */}
-        <div className="grid grid-cols-12 gap-6">
-          
-          {/* Spending Trend (6 Months) */}
-          <div className="col-span-12 xl:col-span-7 bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
-            <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23] mb-6">{label("Spending Trend (6 Months)", "Tendance sur 6 mois")}</h2>
-            
-            <div className="h-64 flex items-end justify-between gap-2 px-2 relative">
-              <div className="absolute inset-0 flex flex-col justify-between z-0 pointer-events-none">
-                <div className="w-full h-px bg-[#e5e7eb]"></div>
-                <div className="w-full h-px bg-[#e5e7eb]"></div>
-                <div className="w-full h-px bg-[#e5e7eb]"></div>
-                <div className="w-full h-px bg-[#e5e7eb]"></div>
-                <div className="w-full h-px bg-[#e5e7eb]"></div>
-              </div>
-              
-              {/* Bars */}
-              {[60, 75, 65, 90, 80, 78].map((height, i) => {
-                const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
-                const isCurrent = i === 5;
-                return (
-                  <div key={months[i]} className="relative z-10 w-full max-w-[40px] flex flex-col items-center group cursor-pointer h-full justify-end">
-                    <div 
-                      className={cn(
-                        "w-full rounded-t-sm transition-colors", 
-                        isCurrent ? "bg-[#003fb1] group-hover:bg-[#003fb1]/80" : "bg-[#003fb1]/40 group-hover:bg-[#003fb1]/60"
-                      )} 
-                      style={{ height: `${height}%` }}
-                    ></div>
-                    <span className={cn("mt-2 text-[11px] font-bold tracking-[0.05em]", isCurrent ? "text-[#003fb1]" : "text-[#434654]")}>{months[i]}</span>
-                  </div>
-                );
-              })}
+        {top && (
+          <Card className="mt-3.5 flex flex-row items-center gap-3">
+            <RoundIcon icon={Lightbulb} size={40} color={palette.warning} background="#FFF3D8" />
+            <div className="flex-1">
+              <p className="text-[12px] font-bold" style={{ color: palette.muted }}>{label("Top spending category", "Catégorie principale")}</p>
+              <p className="text-[15px] font-extrabold mt-[3px]" style={{ color: palette.foreground }}>{categoryName(top[0] as any)} · {formatMoney(top[1], language)}</p>
             </div>
-          </div>
-          
-          {/* Heatmap Placeholder */}
-          <div className="col-span-12 xl:col-span-5 bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
-            <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23] mb-6">{label("Daily Activity", "Activité quotidienne")}</h2>
-            <div className="grid grid-cols-7 gap-2">
-              {['S','M','T','W','T','F','S'].map((day, i) => (
-                <div key={i} className="text-center text-[11px] font-bold tracking-[0.05em] text-[#434654]">{day}</div>
-              ))}
-              
-              {/* Empty blocks for start of month offset */}
-              <div></div><div></div><div></div>
-              
-              {/* Example Heatmap Cells */}
-              {Array.from({ length: 28 }).map((_, i) => {
-                const intensity = [20, 40, 80, 0, 20, 60, 20, 0, 10, 90, 40, 20, 30, 20, 70, 0, 10, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][i];
-                return (
-                  <div 
-                    key={i}
-                    className={cn(
-                      "aspect-square rounded-sm cursor-pointer transition-all hover:ring-2 hover:ring-[#003fb1]",
-                      intensity === 0 ? "bg-[#ededf8]" : intensity > 0 && intensity <= 20 ? "bg-[#003fb1]/20" : intensity <= 50 ? "bg-[#003fb1]/40" : intensity <= 80 ? "bg-[#003fb1]/60" : "bg-[#003fb1]/90"
-                    )}
-                  />
-                );
-              })}
-            </div>
-          </div>
-          
-        </div>
+          </Card>
+        )}
       </div>
+    </div>
+  );
+}
+
+function LegendRow({ color, label, value, muted, fg }: { color: string; label: string; value: string; muted: string; fg: string }) {
+  return (
+    <div className="flex flex-row items-center gap-[7px]">
+      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+      <span className="flex-1 text-[12px] font-bold" style={{ color: muted }}>{label}</span>
+      <span className="text-[12px] font-extrabold" style={{ color: fg }}>{value}</span>
+    </div>
+  );
+}
+
+function CompareMetric({ label, value, change, positive, fg, muted, success, error }: { label: string; value: string; change: number | null; positive: boolean; fg: string; muted: string; success: string; error: string }) {
+  const color = change === null ? muted : positive ? success : error;
+  const prefix = change === null ? "" : change > 0 ? "+" : "";
+  return (
+    <div className="flex-1">
+      <p className="text-[10px] font-bold" style={{ color: muted }}>{label}</p>
+      <p className="text-[13px] font-extrabold mt-1.5" style={{ color: fg }}>{value}</p>
+      <p className="text-[11px] font-extrabold mt-1" style={{ color }}>{change === null ? "—" : `${prefix}${change}%`}</p>
     </div>
   );
 }

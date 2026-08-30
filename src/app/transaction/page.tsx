@@ -2,201 +2,175 @@
 
 import React, { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X, Trash2, ShoppingCart, Car, Home, Laptop, Heart, GraduationCap, ShoppingBag, Receipt, Briefcase, Gift, Banknote, MoreHorizontal } from 'lucide-react';
+import { X, Trash2, Tag, Calendar, Banknote, CreditCard, Repeat, ArrowRightLeft } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
+import { categoryIds } from '@/lib/budget-data';
 import { useThemeContext } from '@/lib/theme-provider';
-import { categoryIds, incomeCategoryIds, TransactionKind } from '@/lib/budget-data';
 import { cn } from '@/lib/utils';
 
-const iconMap: Record<string, any> = {
-  food: ShoppingCart, transport: Car, housing: Home, entertainment: Laptop,
-  health: Heart, education: GraduationCap, shopping: ShoppingBag, other: MoreHorizontal,
-  scholarship: GraduationCap, salary: Briefcase, freelance: Banknote, gift: Gift,
-};
-
-function TransactionContent() {
+function TransactionForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const idParam = searchParams.get('id');
-  const kindParam = searchParams.get('kind') as TransactionKind | null;
-
-  const { palette } = useThemeContext();
+  const id = searchParams.get('id');
+  const kindParam = searchParams.get('kind');
+  
   const { settings, transactions, addTransaction, updateTransaction, deleteTransaction, t, categoryName } = useBudget();
-  const isFrench = settings.language === 'fr';
+  const { palette } = useThemeContext();
+  const language = settings.language;
+  const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
-  const existing = useMemo(() => transactions.find((item) => item.id === idParam), [idParam, transactions]);
-
-  const [kind, setKind] = useState<TransactionKind>(existing?.kind ?? kindParam ?? "expense");
+  const existing = useMemo(() => transactions.find((item) => item.id === id), [transactions, id]);
+  const [kind, setKind] = useState<"income" | "expense">(existing?.kind ?? (kindParam as "income" | "expense") ?? "expense");
   const [amount, setAmount] = useState(existing ? String(existing.amount) : "");
-  const [categoryId, setCategoryId] = useState(existing?.categoryId ?? (kind === "income" ? "scholarship" : "food"));
-  const [date, setDate] = useState(existing?.date.slice(0, 10) ?? new Date().toISOString().slice(0, 10));
-  const [paymentMethod, setPaymentMethod] = useState(existing?.paymentMethod ?? "cash");
-  const [note, setNote] = useState(existing?.note ?? "");
-  const [error, setError] = useState("");
-
-  const categories = kind === "income" ? incomeCategoryIds : categoryIds;
-
-  const toggleKind = (next: TransactionKind) => {
-    setKind(next);
-    setCategoryId(next === "income" ? "scholarship" : "food");
-  };
+  const [title, setTitle] = useState(existing?.title ?? "");
+  const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categoryIds[0]);
+  const [paymentMethod, setPaymentMethod] = useState(existing?.paymentMethod ?? "card");
+  
+  const [errors, setErrors] = useState<{ amount?: string; title?: string }>({});
 
   const save = () => {
-    const numericAmount = Number(amount.replace(",", "."));
-    if (!numericAmount || numericAmount <= 0) { setError(label("Amount is required", "Le montant est requis")); return; }
-    const title = existing?.title.trim() || categoryName(categoryId);
-    const input = { kind, amount: numericAmount, categoryId, title, date, paymentMethod, note: note.trim() || undefined };
+    const value = Number(amount.replace(",", "."));
+    const newErrors: any = {};
+    if (!value || value <= 0) newErrors.amount = t("amount");
+    if (!title.trim()) newErrors.title = label("Title is required", "Titre requis");
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    const input = { kind, amount: value, title: title.trim(), categoryId: categoryId as any, paymentMethod: paymentMethod as "cash" | "card", date: new Date().toISOString() };
     if (existing) updateTransaction(existing.id, input);
     else addTransaction(input);
+    
     router.back();
   };
 
   const remove = () => {
-    if (window.confirm(label("Delete this transaction?", "Supprimer cette transaction ?"))) {
-      deleteTransaction(existing!.id);
+    if (existing && window.confirm(label("Delete this transaction?", "Supprimer cette transaction ?"))) {
+      deleteTransaction(existing.id);
       router.back();
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex items-start justify-center py-12 px-4">
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-background" style={{ backgroundColor: palette.background }}>
+      {/**/}
+      <div className="h-[62px] flex flex-row items-center justify-between px-5 shrink-0">
+        <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+          <X size={22} color={palette.foreground} />
+        </button>
+        <span className="text-[16px] font-extrabold" style={{ color: palette.foreground }}>
+          {existing ? label("Edit transaction", "Modifier") : kind === "income" ? label("Add income", "Ajouter revenu") : label("Add expense", "Ajouter dépense")}
+        </span>
+        <button onClick={save} className="h-10 px-4 rounded-[14px] flex items-center justify-center active:opacity-70" style={{ backgroundColor: palette.primary }}>
+          <span className="text-white text-[14px] font-extrabold">{existing ? label("Save", "Enregistrer") : label("Add", "Ajouter")}</span>
+        </button>
+      </div>
 
-        {/* Header */}
-        <div className="p-6 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9ff]">
-          <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">
-            {existing ? t("edit") : kind === "income" ? t("addIncome") : t("addExpense")}
-          </h2>
-          <div className="flex items-center gap-2">
-            {existing && (
-              <button onClick={remove} className="p-2 rounded-lg hover:bg-[#ffdad6] transition-colors">
-                <Trash2 size={20} className="text-[#ba1a1a]" />
-              </button>
-            )}
-            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
-              <X size={20} className="text-[#434654]" />
+      <div className="flex-1 overflow-y-auto px-5 pb-[100px]">
+        {/**/}
+        {!existing && (
+          <div className="flex flex-row bg-surface rounded-xl p-1 mb-6 border" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+            <button
+              onClick={() => setKind('expense')}
+              className={cn("flex-1 py-2 rounded-lg text-[13px] font-bold text-center", kind === 'expense' ? "bg-white shadow-sm" : "")}
+              style={{ color: kind === 'expense' ? palette.error : palette.muted }}
+            >
+              {label("Expense", "Dépense")}
+            </button>
+            <button
+              onClick={() => setKind('income')}
+              className={cn("flex-1 py-2 rounded-lg text-[13px] font-bold text-center", kind === 'income' ? "bg-[#E7F7F1] shadow-sm" : "")}
+              style={{ color: kind === 'income' ? palette.success : palette.muted }}
+            >
+              {label("Income", "Revenu")}
             </button>
           </div>
+        )}
+
+        {/**/}
+        <div className="flex flex-col mb-5">
+          <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{t("amount")}</span>
+          <div className="h-[70px] rounded-2xl px-5 flex flex-row items-center justify-between border" style={{ backgroundColor: palette.surface, borderColor: errors.amount ? palette.error : palette.border }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => { setAmount(e.target.value); setErrors(prev => ({...prev, amount: undefined})); }}
+              placeholder="0"
+              className="flex-1 bg-transparent border-none outline-none text-[32px] font-extrabold text-left h-full"
+              style={{ color: kind === "income" ? palette.success : palette.foreground }}
+            />
+            <span className="font-extrabold text-[16px] ml-2" style={{ color: palette.muted }}>DH</span>
+          </div>
+          {errors.amount && <span className="text-[11px] font-bold mt-1 ml-1" style={{ color: palette.error }}>{errors.amount}</span>}
         </div>
 
-        <div className="p-6 space-y-6">
-
-          {/* Kind Toggle */}
-          <div className="flex gap-2 p-1 bg-[#ededf8] rounded-lg">
-            {(["expense", "income"] as TransactionKind[]).map((k) => (
-              <button
-                key={k}
-                onClick={() => toggleKind(k)}
-                className={cn(
-                  "flex-1 py-2.5 rounded-md text-[13px] tracking-[0.02em] font-semibold transition-all",
-                  kind === k ? "bg-white text-[#191b23] shadow-sm" : "text-[#434654] hover:text-[#191b23]"
-                )}
-              >
-                {k === "expense" ? t("expense") : t("income")}
-              </button>
-            ))}
+        {/**/}
+        <div className="flex flex-col mb-5">
+          <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{label("Title", "Titre")}</span>
+          <div className="h-[52px] rounded-xl px-4 flex flex-row items-center border" style={{ backgroundColor: palette.surface, borderColor: errors.title ? palette.error : palette.border }}>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => { setTitle(e.target.value); setErrors(prev => ({...prev, title: undefined})); }}
+              placeholder={label("e.g. Groceries", "ex: Courses")}
+              className="flex-1 bg-transparent border-none outline-none text-[15px] font-bold h-full"
+              style={{ color: palette.foreground }}
+            />
           </div>
+          {errors.title && <span className="text-[11px] font-bold mt-1 ml-1" style={{ color: palette.error }}>{errors.title}</span>}
+        </div>
 
-          {/* Amount */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("amount")}</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => { setAmount(e.target.value); setError(""); }}
-                placeholder="0"
-                className="flex-1 text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
-              />
-              <span className="text-[22px] font-semibold text-[#434654]">DH</span>
-            </div>
-            {error && <p className="text-[13px] text-[#ba1a1a] font-semibold mt-2">{error}</p>}
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Category", "Catégorie")}</label>
-            <div className="grid grid-cols-4 gap-2">
-              {categories.map((id) => {
-                const Icon = iconMap[id] || Receipt;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setCategoryId(id)}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-lg border transition-all text-center",
-                      categoryId === id
-                        ? "bg-[#003fb1]/5 border-[#003fb1] ring-1 ring-[#003fb1]"
-                        : "bg-white border-[#e5e7eb] hover:border-[#003fb1]/30"
-                    )}
-                  >
-                    <Icon size={20} className={categoryId === id ? "text-[#003fb1]" : "text-[#434654]"} />
-                    <span className={cn(
-                      "text-[11px] font-semibold",
-                      categoryId === id ? "text-[#003fb1]" : "text-[#434654]"
-                    )}>
-                      {categoryName(id)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Payment Method */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Payment Method", "Méthode de paiement")}</label>
-            <div className="flex gap-2">
-              {["cash", "card"].map((method) => (
+        {/**/}
+        {kind === "expense" && (
+          <div className="flex flex-col mb-5">
+            <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{label("Category", "Catégorie")}</span>
+            <div className="flex flex-row flex-wrap gap-2">
+              {categoryIds.map(cat => (
                 <button
-                  key={method}
-                  onClick={() => setPaymentMethod(method as "cash" | "card")}
-                  className={cn(
-                    "flex-1 py-3 rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors border",
-                    paymentMethod === method
-                      ? "bg-[#003fb1] text-white border-[#003fb1]"
-                      : "bg-[#ededf8] text-[#434654] border-[#e5e7eb] hover:bg-[#e2e1ed]"
-                  )}
+                  key={cat}
+                  onClick={() => setCategoryId(cat)}
+                  className={cn("px-4 py-2 rounded-xl border text-[12px] font-bold active:opacity-70", categoryId === cat ? "bg-[#003fb1] text-white border-transparent" : "")}
+                  style={categoryId !== cat ? { backgroundColor: palette.surface, borderColor: palette.border, color: palette.muted } : {}}
                 >
-                  {method === "cash" ? t("cash") : t("card")}
+                  {categoryName(cat)}
                 </button>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Date */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Date", "Date")}</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-[#e5e7eb] bg-white text-[14px] text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1] transition-all"
-            />
+        {/**/}
+        <div className="flex flex-col mb-5">
+          <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{label("Payment Method", "Moyen de paiement")}</span>
+          <div className="flex flex-row gap-2">
+            {[
+              { id: "cash", icon: Banknote, label: t("cash") },
+              { id: "card", icon: CreditCard, label: t("card") },
+              { id: "transfer", icon: ArrowRightLeft, label: label("Transfer", "Virement") }
+            ].map(method => (
+              <button
+                key={method.id}
+                onClick={() => setPaymentMethod(method.id as any)}
+                className={cn("flex-1 h-14 rounded-xl border flex flex-col items-center justify-center gap-1 active:opacity-65 transition-opacity", paymentMethod === method.id && "bg-[#E7F7F1] border-transparent shadow-sm")}
+                style={paymentMethod !== method.id ? { backgroundColor: palette.surface, borderColor: palette.border } : {}}
+              >
+                <method.icon size={16} color={paymentMethod === method.id ? palette.primary : palette.muted} />
+                <span className="text-[11px] font-bold" style={{ color: paymentMethod === method.id ? palette.primary : palette.muted }}>{method.label}</span>
+              </button>
+            ))}
           </div>
-
-          {/* Note */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Note (optional)", "Note (facultatif)")}</label>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={label("Add a note...", "Ajouter une note...")}
-              rows={3}
-              className="w-full px-4 py-3 rounded-lg border border-[#e5e7eb] bg-white text-[14px] text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1] transition-all resize-none placeholder:text-[#c3c5d7]"
-            />
-          </div>
-
-          {/* Save Button */}
-          <button
-            onClick={save}
-            className="w-full py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
-          >
-            {existing ? label("Update Transaction", "Mettre à jour") : label("Save Transaction", "Enregistrer")}
-          </button>
         </div>
+
+        {/**/}
+        {existing && (
+          <button onClick={remove} className="mt-4 flex flex-row items-center justify-center gap-2 h-[52px] rounded-xl border" style={{ borderColor: '#ffdad6', backgroundColor: '#fff' }}>
+            <Trash2 size={18} color={palette.error} />
+            <span className="text-[14px] font-bold" style={{ color: palette.error }}>{label("Delete Transaction", "Supprimer la transaction")}</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -204,8 +178,8 @@ function TransactionContent() {
 
 export default function TransactionPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8f9ff]" />}>
-      <TransactionContent />
+    <Suspense fallback={<div />}>
+      <TransactionForm />
     </Suspense>
   );
 }

@@ -1,92 +1,54 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar as CalendarIcon, ArrowDownLeft } from 'lucide-react';
+import { X, CalendarDays } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
-import { formatMoney } from '@/lib/budget-data';
-import { cn } from '@/lib/utils';
-import { FormattedDate } from '@/components/budget-ui';
+import { useThemeContext } from '@/lib/theme-provider';
 
-export default function IncomeCalendarPage() {
+export default function IncomeCalendarScreen() {
   const router = useRouter();
-  const { settings, transactions, t } = useBudget();
-  const isFrench = settings.language === 'fr';
+  const { settings, recurring, t } = useBudget();
+  const { palette } = useThemeContext();
+  const language = settings.language;
+  const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
-  const incomeTransactions = useMemo(() => {
-    return transactions
-      .filter(t => t.kind === 'income')
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions]);
-
-  const totalIncome = incomeTransactions.reduce((acc, curr) => acc + curr.amount, 0);
+  const recurringIncome = recurring.filter((item) => item.kind === "income");
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff]">
-      <div className="max-w-3xl mx-auto py-8 px-6 space-y-6">
+    <div className="flex flex-col h-full w-full px-5" style={{ backgroundColor: palette.background }}>
+      <div className="h-[62px] flex flex-row items-center justify-between shrink-0">
+        <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+          <X size={22} color={palette.foreground} />
+        </button>
+        <span className="text-[16px] font-extrabold" style={{ color: palette.foreground }}>{label("Income Calendar", "Calendrier des revenus")}</span>
+        <div className="w-10" />
+      </div>
 
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
-            <ArrowLeft size={20} className="text-[#434654]" />
-          </button>
-          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Income Calendar", "Calendrier des revenus")}</h1>
+      <div className="flex-1 flex flex-col items-center justify-center pt-8">
+        <div className="h-[70px] w-[70px] rounded-[25px] flex items-center justify-center mb-[18px]" style={{ backgroundColor: '#E7F7F1' }}>
+          <CalendarDays size={32} color={palette.success} />
         </div>
-
-        {/* Summary Card */}
-        <div className="bg-[#003fb1] rounded-xl p-6 shadow-md text-white flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.05em] text-white/70 uppercase mb-2">{label("Total Income Recorded", "Total des revenus enregistrés")}</p>
-            <p className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold tabular-nums">
-              {formatMoney(totalIncome, settings.language as any)}
+        <p className="text-[24px] font-extrabold text-center px-4" style={{ color: palette.foreground }}>
+          {label("Your Paydays", "Vos jours de paie")}
+        </p>
+        
+        <div className="w-full max-w-[400px] mt-8 flex flex-col gap-3">
+          {recurringIncome.length === 0 ? (
+            <p className="text-[14px] text-center" style={{ color: palette.muted }}>
+              {label("No income scheduled.", "Aucun revenu planifié.")}
             </p>
-          </div>
-          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
-            <CalendarIcon size={32} className="text-white" />
-          </div>
-        </div>
-
-        {/* List */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-          <div className="p-5 border-b border-[#e5e7eb] bg-[#f8f9ff]">
-            <h2 className="text-[16px] font-semibold text-[#191b23]">{label("Income History", "Historique des revenus")}</h2>
-          </div>
-          
-          {incomeTransactions.length === 0 ? (
-            <div className="p-12 text-center">
-              <CalendarIcon size={40} className="text-[#c3c5d7] mx-auto mb-3" />
-              <p className="text-[14px] text-[#434654]">{label("No income recorded yet.", "Aucun revenu enregistré.")}</p>
-              <button
-                onClick={() => router.push('/transaction?kind=income')}
-                className="mt-4 px-6 py-2.5 bg-[#003fb1] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#1a56db] transition-colors"
-              >
-                {label("Record Income", "Enregistrer un revenu")}
-              </button>
-            </div>
           ) : (
-            <div className="divide-y divide-[#e5e7eb]">
-              {incomeTransactions.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => router.push(`/transaction?id=${item.id}`)}
-                  className="w-full p-4 flex items-center gap-4 hover:bg-[#f8f9ff] transition-colors text-left"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-[#E7F7F1] flex items-center justify-center shrink-0">
-                    <ArrowDownLeft size={24} className="text-[#006c49]" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[15px] font-bold text-[#191b23]">{item.title}</p>
-                    <p className="text-[12px] text-[#434654] mt-1">
-                      <FormattedDate date={item.date} language={settings.language as any} />
-                    </p>
-                  </div>
-                  <p className="text-[16px] font-bold text-[#006c49] tabular-nums">
-                    +{formatMoney(item.amount, settings.language as any)}
-                  </p>
-                </button>
-              ))}
-            </div>
+            recurringIncome.map(item => (
+              <div key={item.id} className="p-4 rounded-2xl border flex flex-row justify-between items-center" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+                <div>
+                  <p className="text-[15px] font-extrabold" style={{ color: palette.foreground }}>{item.title}</p>
+                  <p className="text-[13px] mt-1" style={{ color: palette.muted }}>{item.nextDueDate}</p>
+                </div>
+                <p className="text-[16px] font-extrabold" style={{ color: palette.success }}>{item.amount} DH</p>
+              </div>
+            ))
           )}
         </div>
       </div>

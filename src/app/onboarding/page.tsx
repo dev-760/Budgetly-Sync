@@ -2,161 +2,101 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, ChevronRight, Check } from 'lucide-react';
-import { useBudget } from '@/lib/budget-store';
+import { Wallet, GraduationCap, CalendarRange, PiggyBank, ArrowRight } from 'lucide-react';
+import { BrandMark, ProgressBar } from '@/components/budget-ui';
 import { Language } from '@/lib/budget-data';
+import { useBudget } from '@/lib/budget-store';
+import { useThemeContext } from '@/lib/theme-provider';
 import { cn } from '@/lib/utils';
-import { BrandMark } from '@/components/budget-ui';
 
-export default function OnboardingPage() {
+export default function OnboardingScreen() {
+  const { settings, setLanguage, t, completeOnboarding } = useBudget();
+  const { palette } = useThemeContext();
   const router = useRouter();
-  const { settings, setLanguage, updateProfile, completeOnboarding } = useBudget();
-  const [step, setStep] = useState(1);
-  
-  const [tempLang, setTempLang] = useState<Language>(settings.language);
-  const [tempName, setTempName] = useState(settings.displayName || "");
+  const [step, setStep] = useState(0);
+  const language = settings.language;
 
-  const isFrench = tempLang === 'fr';
-  const label = (en: string, fr: string) => isFrench ? fr : en;
+  const cards = [
+    { icon: Wallet, title: t("welcome"), body: t("welcomeBody"), accent: palette.primary },
+    { icon: GraduationCap, title: t("mainIncome"), body: language === "fr" ? "Bourse, allocation familiale, stage ou travail à temps partiel." : "Scholarship, family allowance, internship, or a part-time job.", accent: palette.success },
+    { icon: CalendarRange, title: t("recurringExpenses"), body: language === "fr" ? "Loyer, transport, internet et abonnements sont pris en compte." : "Rent, transport, internet, and subscriptions are included in your plan.", accent: palette.warning },
+    { icon: PiggyBank, title: t("savingsGoal"), body: language === "fr" ? "Ton premier budget et tes objectifs sont prêts à évoluer avec toi." : "Your first budget and savings goals are ready to grow with you.", accent: "#7A63D2" },
+  ];
+  const current = cards[step];
+  const lastStep = step === cards.length - 1;
+  const Icon = current.icon;
 
-  const handleNext = () => {
-    if (step === 2) {
-      setLanguage(tempLang);
-    }
-    if (step === 3) {
-      if (tempName.trim()) updateProfile({ displayName: tempName.trim() });
+  const handleContinue = () => {
+    if (lastStep) {
       completeOnboarding();
-      router.replace('/');
-      return;
-    }
-    setStep(s => s + 1);
+      router.replace('/budget-edit?fromOnboarding=true');
+    } else setStep((v) => v + 1);
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex flex-col items-center justify-center p-6">
-      
-      {/* Top Logo */}
-      <div className="absolute top-10 left-10 flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#003fb1] rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-          <BrandMark size={40} />
+    <div className="flex flex-col h-full w-full px-6 pt-16 pb-8" style={{ backgroundColor: palette.background }}>
+      {/* Language Switch */}
+      <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row rounded-3xl p-1 gap-1 border" style={{ backgroundColor: '#F3F4F6', borderColor: palette.border }}>
+          {(["en", "fr"] as Language[]).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={cn("px-4 py-2 rounded-[20px] text-[13px] font-bold active:opacity-70 transition-all", language === lang ? "bg-white shadow-sm" : "")}
+              style={{ color: language === lang ? palette.primary : palette.muted }}
+            >
+              {lang === "en" ? "EN" : "FR"}
+            </button>
+          ))}
         </div>
-        <span className="text-[20px] font-extrabold text-[#191b23] tracking-[-0.02em]">Budgetly</span>
       </div>
 
-      <div className="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-        
-        {/* Step 1: Welcome */}
-        {step === 1 && (
-          <div className="p-10 text-center space-y-6">
-            <div className="w-24 h-24 bg-[#003fb1]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShieldCheck size={48} className="text-[#003fb1]" />
-            </div>
-            <h1 className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23]">
-              {label("Welcome to Budgetly", "Bienvenue sur Budgetly")}
-            </h1>
-            <p className="text-[16px] leading-[24px] text-[#434654] max-w-sm mx-auto">
-              {label("Your local-first personal finance manager. Private, fast, and completely yours.", "Votre gestionnaire de finances personnelles local. Privé, rapide et entièrement à vous.")}
-            </p>
-          </div>
-        )}
+      {/* Progress */}
+      <div className="mt-8 mb-6">
+        <ProgressBar value={(step + 1) / cards.length} color={palette.primary} />
+      </div>
 
-        {/* Step 2: Language */}
-        {step === 2 && (
-          <div className="p-10 space-y-8">
-            <div className="text-center">
-              <h2 className="text-[28px] leading-[36px] tracking-[-0.01em] font-bold text-[#191b23] mb-2">
-                {label("Choose your language", "Choisissez votre langue")}
-              </h2>
-              <p className="text-[14px] text-[#434654]">
-                {label("You can change this later in settings.", "Vous pourrez la modifier plus tard dans les paramètres.")}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {(["en", "fr"] as Language[]).map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setTempLang(lang)}
-                  className={cn(
-                    "p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 relative",
-                    tempLang === lang 
-                      ? "border-[#003fb1] bg-[#003fb1]/5 shadow-sm" 
-                      : "border-[#e5e7eb] hover:border-[#003fb1]/30"
-                  )}
-                >
-                  <span className="text-[40px]">{lang === 'en' ? '🇺🇸' : '🇫🇷'}</span>
-                  <span className="text-[16px] font-semibold text-[#191b23]">
-                    {lang === 'en' ? 'English' : 'Français'}
-                  </span>
-                  {tempLang === lang && (
-                    <div className="absolute top-3 right-3 w-6 h-6 bg-[#003fb1] rounded-full flex items-center justify-center">
-                      <Check size={14} className="text-white" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
+      {/* Artwork */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="relative w-[200px] h-[200px] rounded-full flex items-center justify-center" style={{ backgroundColor: current.accent + '15' }}>
+          <div className="w-[140px] h-[140px] rounded-[28px] flex items-center justify-center" style={{ backgroundColor: current.accent }}>
+            {step === 0 ? <BrandMark size={116} radius={28} /> : <Icon size={62} color="white" />}
           </div>
-        )}
-
-        {/* Step 3: Profile */}
-        {step === 3 && (
-          <div className="p-10 space-y-8">
-            <div className="text-center">
-              <h2 className="text-[28px] leading-[36px] tracking-[-0.01em] font-bold text-[#191b23] mb-2">
-                {label("What should we call you?", "Comment devons-nous vous appeler ?")}
-              </h2>
-              <p className="text-[14px] text-[#434654]">
-                {label("Personalize your experience.", "Personnalisez votre expérience.")}
-              </p>
-            </div>
-            
-            <div>
-              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">
-                {label("Display Name", "Nom d'affichage")}
-              </label>
-              <input
-                type="text"
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-                placeholder={label("Enter your name", "Entrez votre nom")}
-                className="w-full px-5 py-4 rounded-xl border border-[#e5e7eb] bg-white text-[16px] text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-2 focus:ring-[#003fb1]/20 transition-all font-medium placeholder:text-[#c3c5d7]"
-                autoFocus
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Footer Actions */}
-        <div className="px-10 py-6 border-t border-[#e5e7eb] bg-[#f8f9ff] flex items-center justify-between">
-          
-          {/* Progress Dots */}
-          <div className="flex gap-2">
-            {[1, 2, 3].map((i) => (
-              <div 
-                key={i}
-                className={cn(
-                  "h-2 rounded-full transition-all duration-300",
-                  step === i ? "w-6 bg-[#003fb1]" : "w-2 bg-[#c3c5d7]"
-                )}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={handleNext}
-            disabled={step === 3 && !tempName.trim()}
-            className="flex items-center gap-2 px-8 py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {step === 1 
-              ? label("Get Started", "Commencer") 
-              : step === 3 
-                ? label("Complete Setup", "Terminer la configuration")
-                : label("Continue", "Continuer")
-            }
-            {step !== 3 && <ChevronRight size={18} />}
-          </button>
+          <div className="absolute w-3 h-3 rounded-full top-4 right-8" style={{ backgroundColor: current.accent, opacity: 0.6 }} />
+          <div className="absolute w-2 h-2 rounded-full bottom-6 left-5" style={{ backgroundColor: current.accent, opacity: 0.4 }} />
         </div>
+
+        {/* Content */}
+        <div className="mt-8 text-center px-2">
+          <p className="text-[12px] font-bold uppercase tracking-wide" style={{ color: palette.muted }}>{t("studentTip")}</p>
+          <h1 className="text-[28px] font-extrabold tracking-[-0.8px] mt-3" style={{ color: palette.foreground }}>{current.title}</h1>
+          <p className="text-[15px] leading-[22px] mt-3 max-w-[300px] mx-auto" style={{ color: palette.muted }}>{current.body}</p>
+        </div>
+      </div>
+
+      {/* Bottom */}
+      <div className="flex flex-col items-center mt-auto pt-4">
+        <div className="flex flex-row gap-2 mb-6">
+          {cards.map((_, i) => (
+            <div key={i} className={cn("rounded-full transition-all", i === step ? "w-6 h-2" : "w-2 h-2")} style={{ backgroundColor: i === step ? palette.primary : palette.border }} />
+          ))}
+        </div>
+        <button
+          onClick={handleContinue}
+          className="w-full h-[54px] rounded-2xl flex flex-row items-center justify-center gap-2 active:opacity-70 transition-opacity shadow-lg"
+          style={{ backgroundColor: palette.primary }}
+        >
+          <span className="text-white text-[15px] font-extrabold">{lastStep ? t("finish") : t("continue")}</span>
+          <ArrowRight size={20} color="white" />
+        </button>
+        {!lastStep && (
+          <button
+            onClick={() => { completeOnboarding(); router.replace('/'); }}
+            className="mt-4 py-2 active:opacity-70 transition-opacity"
+          >
+            <span className="text-[14px] font-bold" style={{ color: palette.muted }}>{t("skip")}</span>
+          </button>
+        )}
       </div>
     </div>
   );

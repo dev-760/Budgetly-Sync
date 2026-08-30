@@ -2,110 +2,85 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, Bell, AlertTriangle, Info, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Check, CalendarDays, Bell } from 'lucide-react';
+import { EmptyState, RoundIcon } from '@/components/budget-ui';
+import { formatDate } from '@/lib/budget-data';
 import { useBudget } from '@/lib/budget-store';
-import { FormattedDate } from '@/components/budget-ui';
+import { useThemeContext } from '@/lib/theme-provider';
 import { cn } from '@/lib/utils';
 
-const iconMap = {
-  warning: AlertTriangle,
-  success: CheckCircle,
-  info: Info,
-  general: Bell
-};
-
-const colorMap = {
-  warning: "text-[#ba1a1a] bg-[#ffdad6]",
-  success: "text-[#006c49] bg-[#006c49]/10",
-  info: "text-[#003fb1] bg-[#003fb1]/10",
-  general: "text-[#434654] bg-[#ededf8]"
-};
-
-export default function NotificationsPage() {
-  const router = useRouter();
+export default function NotificationsScreen() {
   const { settings, notifications, markNotificationsRead, t } = useBudget();
-  const isFrench = settings.language === 'fr';
-  const label = (en: string, fr: string) => isFrench ? fr : en;
+  const { palette } = useThemeContext();
+  const router = useRouter();
+  const unread = notifications.some((item) => !item.isRead);
+
+  const getIcon = (type: string) => {
+    if (type === "warning") return AlertTriangle;
+    if (type === "success") return Check;
+    return CalendarDays;
+  };
+  const getColor = (type: string) => {
+    if (type === "warning") return palette.warning;
+    if (type === "success") return palette.success;
+    return palette.primary;
+  };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff]">
-      <div className="max-w-3xl mx-auto py-8 px-6 space-y-6">
+    <div className="flex flex-col h-full w-full px-5" style={{ backgroundColor: palette.background }}>
+      {/* Header */}
+      <div className="h-[62px] flex flex-row items-center justify-between shrink-0">
+        <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70 transition-opacity" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+          <ArrowLeft size={22} color={palette.foreground} />
+        </button>
+        <span className="text-[17px] font-extrabold" style={{ color: palette.foreground }}>{t("notifications")}</span>
+        <button
+          disabled={!unread}
+          onClick={() => markNotificationsRead()}
+          className={cn("py-2 pl-2 active:opacity-70 transition-opacity", !unread && "opacity-45")}
+        >
+          <span className="text-[12px] font-extrabold" style={{ color: unread ? palette.primary : palette.muted }}>{t("markAllRead")}</span>
+        </button>
+      </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
-              <ArrowLeft size={20} className="text-[#434654]" />
-            </button>
-            <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{t("notifications")}</h1>
+      {/* List */}
+      <div className="flex-1 overflow-y-auto pt-3.5 pb-7">
+        {notifications.length === 0 ? (
+          <EmptyState icon={Bell} title={t("noNotifications")} body="" />
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {notifications.map((item) => {
+              const color = getColor(item.type);
+              const Icon = getIcon(item.type);
+              return (
+                <div
+                  key={item.id}
+                  className="min-h-[92px] rounded-[20px] border p-3.5 flex flex-row gap-[11px]"
+                  style={{
+                    backgroundColor: !item.isRead ? '#F8FAFC' : palette.surface,
+                    borderColor: palette.border
+                  }}
+                >
+                  <RoundIcon icon={Icon} size={42} color={color} background={color + '18'} />
+                  <div className="flex-1 pr-[7px]">
+                    <p className="text-[14px] font-extrabold" style={{ color: palette.foreground }}>
+                      {t(item.titleKey as Parameters<typeof t>[0])}
+                    </p>
+                    <p className="text-[12px] leading-[17px] mt-1" style={{ color: palette.muted }}>
+                      {t(item.bodyKey as Parameters<typeof t>[0])}
+                    </p>
+                    <p className="text-[11px] font-semibold mt-[7px]" style={{ color: palette.muted }}>
+                      {formatDate(item.createdAt, settings.language)}
+                    </p>
+                  </div>
+                  {!item.isRead && (
+                    <div className="w-2 h-2 rounded-full mt-[3px]" style={{ backgroundColor: palette.primary }} />
+                  )}
+                </div>
+              );
+            })}
           </div>
-          
-          {notifications.some(n => !n.isRead) && (
-            <button
-              onClick={markNotificationsRead}
-              className="flex items-center gap-2 px-4 py-2 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#003fb1] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors"
-            >
-              <CheckCircle2 size={16} />
-              {label("Mark all read", "Tout marquer comme lu")}
-            </button>
-          )}
-        </div>
-
-        {/* Notifications List */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-          {notifications.length === 0 ? (
-            <div className="p-16 text-center">
-              <Bell size={48} className="text-[#c3c5d7] mx-auto mb-4" />
-              <h3 className="text-[18px] font-semibold text-[#191b23] mb-2">{label("No notifications", "Aucune notification")}</h3>
-              <p className="text-[14px] text-[#434654]">{label("You're all caught up!", "Vous êtes à jour !")}</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#e5e7eb]">
-              {notifications.map((notif) => {
-                const Icon = iconMap[notif.type as keyof typeof iconMap] || Bell;
-                const colors = colorMap[notif.type as keyof typeof colorMap] || colorMap.general;
-                
-                return (
-                  <button
-                    key={notif.id}
-                    onClick={() => !notif.isRead && markNotificationsRead()}
-                    className={cn(
-                      "w-full p-5 flex items-start gap-4 text-left transition-colors",
-                      !notif.isRead ? "bg-[#f3f3fe] hover:bg-[#e6eeff]" : "bg-white hover:bg-[#f8f9ff]"
-                    )}
-                  >
-                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", colors)}>
-                      <Icon size={20} />
-                    </div>
-                    
-                    <div className="flex-1 pt-1">
-                      <h3 className={cn(
-                        "text-[14px] mb-1",
-                        !notif.isRead ? "font-bold text-[#191b23]" : "font-semibold text-[#434654]"
-                      )}>
-                        {t(notif.titleKey as any)}
-                      </h3>
-                      <p className={cn(
-                        "text-[13px] leading-[18px]",
-                        !notif.isRead ? "text-[#434654]" : "text-[#737686]"
-                      )}>
-                        {t(notif.bodyKey as any)}
-                      </p>
-                      <p className="text-[11px] font-bold tracking-[0.05em] text-[#737686] uppercase mt-2">
-                        <FormattedDate date={notif.createdAt} language={settings.language as any} />
-                      </p>
-                    </div>
-
-                    {!notif.isRead && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#003fb1] mt-2 shrink-0 shadow-sm" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
+        )}
       </div>
     </div>
   );

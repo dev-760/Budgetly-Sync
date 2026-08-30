@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Palette, Globe, Bell, Download, Trash2, Shield } from 'lucide-react';
+import { Card, RoundIcon, SectionTitle } from '@/components/budget-ui';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext, visualThemes } from '@/lib/theme-provider';
 import { Language } from '@/lib/budget-data';
@@ -16,16 +17,12 @@ export default function SettingsPage() {
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
   const confirmReset = () => {
-    if (window.confirm(label(
-      "This will erase all your local data. This cannot be undone. Continue?",
-      "Cela effacera toutes vos données locales. Cette action est irréversible. Continuer ?"
-    ))) {
+    if (window.confirm(label("This will erase all your local data. This cannot be undone. Continue?", "Cela effacera toutes vos données locales. Cette action est irréversible. Continuer ?"))) {
       clearLocalData();
     }
   };
 
   const exportData = (format: 'json' | 'csv') => {
-    // Simple export placeholder
     const data = JSON.stringify({ settings, exportedAt: new Date().toISOString() }, null, 2);
     const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -37,134 +34,96 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff]">
-      <div className="max-w-3xl mx-auto py-8 px-6 space-y-6">
-
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+      <div className="pt-0 pb-7">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
-            <ArrowLeft size={20} className="text-[#434654]" />
+        <div className="h-[62px] flex flex-row items-center gap-3 shrink-0">
+          <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70 transition-opacity" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+            <ArrowLeft size={22} color={palette.foreground} />
           </button>
-          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Settings", "Réglages")}</h1>
+          <h1 className="text-[17px] font-extrabold" style={{ color: palette.foreground }}>{label("Settings", "Réglages")}</h1>
         </div>
 
         {/* Appearance */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-          <div className="p-6 border-b border-[#e5e7eb] flex items-center gap-3">
-            <Palette size={20} className="text-[#003fb1]" />
-            <h2 className="text-[18px] font-semibold text-[#191b23]">{label("Appearance", "Apparence")}</h2>
+        <SectionTitle title={label("Appearance", "Apparence")} />
+        <Card>
+          <p className="text-[12px] font-bold uppercase tracking-wide mb-3" style={{ color: palette.muted }}>{label("Theme", "Thème")}</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            {(Object.entries(visualThemes) as [string, typeof visualThemes[keyof typeof visualThemes]][]).map(([id, theme]) => (
+              <button
+                key={id}
+                onClick={() => setAppearancePreferences({ visualTheme: id as any })}
+                className={cn("p-3 rounded-2xl border-2 text-center active:opacity-70 transition-all", settings.appearance.visualTheme === id ? "shadow-sm" : "")}
+                style={{ borderColor: settings.appearance.visualTheme === id ? palette.primary : palette.border, backgroundColor: settings.appearance.visualTheme === id ? palette.primary + '08' : palette.surface }}
+              >
+                <div className="w-8 h-8 rounded-full mx-auto mb-2" style={{ backgroundColor: theme.primary }} />
+                <span className="text-[12px] font-bold" style={{ color: palette.foreground }}>{theme.name}</span>
+              </button>
+            ))}
           </div>
-          <div className="p-6">
-            <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-4">{label("Theme", "Thème")}</p>
-            <div className="grid grid-cols-3 gap-3">
-              {(Object.entries(visualThemes) as [string, typeof visualThemes[keyof typeof visualThemes]][]).map(([id, theme]) => (
-                <button
-                  key={id}
-                  onClick={() => setAppearancePreferences({ visualTheme: id as any })}
-                  className={cn(
-                    "p-4 rounded-xl border-2 transition-all text-center",
-                    settings.appearance.visualTheme === id
-                      ? "border-[#003fb1] bg-[#003fb1]/5 shadow-sm"
-                      : "border-[#e5e7eb] hover:border-[#003fb1]/30"
-                  )}
-                >
-                  <div className="w-10 h-10 rounded-full mx-auto mb-3" style={{ backgroundColor: theme.primary }}></div>
-                  <p className="text-[13px] font-semibold text-[#191b23]">{theme.name}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        </Card>
 
         {/* Language */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-          <div className="p-6 border-b border-[#e5e7eb] flex items-center gap-3">
-            <Globe size={20} className="text-[#003fb1]" />
-            <h2 className="text-[18px] font-semibold text-[#191b23]">{t("language")}</h2>
-          </div>
-          <div className="p-6">
-            <div className="flex gap-3">
-              {(["en", "fr"] as Language[]).map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setLanguage(lang)}
-                  className={cn(
-                    "flex-1 py-3 rounded-lg text-[14px] font-semibold transition-colors border",
-                    settings.language === lang
-                      ? "bg-[#003fb1] text-white border-[#003fb1]"
-                      : "bg-[#ededf8] text-[#434654] border-[#e5e7eb] hover:bg-[#e2e1ed]"
-                  )}
-                >
+        <SectionTitle title={t("language")} />
+        <Card>
+          <div className="flex flex-row gap-2">
+            {(["en", "fr"] as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className="flex-1 py-2.5 rounded-xl border text-center active:opacity-70 transition-all"
+                style={{ backgroundColor: settings.language === lang ? '#F1F5F9' : palette.background, borderColor: palette.border }}
+              >
+                <span className="text-[13px] font-bold" style={{ color: settings.language === lang ? palette.primary : palette.muted }}>
                   {lang === "en" ? "English" : "Français"}
-                </button>
-              ))}
-            </div>
+                </span>
+              </button>
+            ))}
           </div>
-        </div>
+        </Card>
 
         {/* Notifications */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell size={20} className="text-[#003fb1]" />
-              <h2 className="text-[18px] font-semibold text-[#191b23]">{t("notificationsEnabled")}</h2>
-            </div>
-            <button
-              onClick={toggleNotifications}
-              className={cn(
-                "w-12 h-7 rounded-full transition-colors relative",
-                settings.notificationsEnabled ? "bg-[#003fb1]" : "bg-[#c3c5d7]"
-              )}
-            >
-              <div className={cn(
-                "w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm",
-                settings.notificationsEnabled ? "left-6" : "left-1"
-              )} />
-            </button>
+        <SectionTitle title={t("notificationsEnabled")} />
+        <Card className="flex flex-row items-center justify-between">
+          <div className="flex flex-row items-center gap-2.5">
+            <RoundIcon icon={Bell} size={36} color={palette.primary} background="#EAF0FF" />
+            <span className="text-[14px] font-bold" style={{ color: palette.foreground }}>{label("Push Notifications", "Notifications push")}</span>
           </div>
-        </div>
+          <button
+            onClick={toggleNotifications}
+            className="w-[51px] h-[31px] rounded-full p-[2px] transition-colors"
+            style={{ backgroundColor: settings.notificationsEnabled ? palette.primary : palette.border }}
+          >
+            <div className={cn("w-[27px] h-[27px] rounded-full bg-white shadow-sm transition-transform", settings.notificationsEnabled ? "translate-x-5" : "translate-x-0")} />
+          </button>
+        </Card>
 
         {/* Data Export */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
-          <div className="p-6 border-b border-[#e5e7eb] flex items-center gap-3">
-            <Download size={20} className="text-[#003fb1]" />
-            <h2 className="text-[18px] font-semibold text-[#191b23]">{label("Data Export", "Export des données")}</h2>
-          </div>
-          <div className="p-6 flex gap-3">
-            <button
-              onClick={() => exportData('json')}
-              className="flex-1 py-3 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#191b23] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors"
-            >
-              {label("Export JSON", "Exporter JSON")}
-            </button>
-            <button
-              onClick={() => exportData('csv')}
-              className="flex-1 py-3 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#191b23] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors"
-            >
-              {label("Export CSV", "Exporter CSV")}
-            </button>
-          </div>
-        </div>
+        <SectionTitle title={label("Data Export", "Export des données")} />
+        <Card className="flex flex-row gap-2.5">
+          <button onClick={() => exportData('json')} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity" style={{ backgroundColor: '#F1F5F9', color: palette.foreground }}>
+            {label("Export JSON", "Exporter JSON")}
+          </button>
+          <button onClick={() => exportData('csv')} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity" style={{ backgroundColor: '#F1F5F9', color: palette.foreground }}>
+            {label("Export CSV", "Exporter CSV")}
+          </button>
+        </Card>
 
         {/* Danger Zone */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#ffdad6] overflow-hidden">
-          <div className="p-6 border-b border-[#ffdad6] flex items-center gap-3">
-            <Shield size={20} className="text-[#ba1a1a]" />
-            <h2 className="text-[18px] font-semibold text-[#ba1a1a]">{label("Danger Zone", "Zone de danger")}</h2>
-          </div>
-          <div className="p-6">
-            <p className="text-[14px] text-[#434654] mb-4">
-              {label("This action will permanently erase all your local financial data.", "Cette action effacera définitivement toutes vos données financières locales.")}
-            </p>
-            <button
-              onClick={confirmReset}
-              className="flex items-center gap-2 px-5 py-3 bg-[#ba1a1a] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#93000a] transition-colors"
-            >
-              <Trash2 size={16} />
-              {t("clearLocalData")}
-            </button>
-          </div>
-        </div>
+        <SectionTitle title={label("Danger Zone", "Zone de danger")} />
+        <Card style={{ borderColor: '#ffdad6' }}>
+          <p className="text-[13px] leading-[18px] mb-3" style={{ color: palette.muted }}>
+            {label("This action will permanently erase all your local financial data.", "Cette action effacera définitivement toutes vos données financières locales.")}
+          </p>
+          <button
+            onClick={confirmReset}
+            className="flex flex-row items-center gap-2 px-4 py-2.5 rounded-xl text-white text-[13px] font-extrabold active:opacity-70 transition-opacity"
+            style={{ backgroundColor: palette.error }}
+          >
+            <Trash2 size={16} />
+            {t("clearLocalData")}
+          </button>
+        </Card>
       </div>
     </div>
   );

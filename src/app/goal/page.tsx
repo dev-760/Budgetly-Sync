@@ -2,57 +2,51 @@
 
 import React, { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X, Trash2, Home, Car, GraduationCap, Plane, Laptop, ShoppingBag, Gift, MoreHorizontal } from 'lucide-react';
+import { X, Trash2, Flag, Laptop, Heart, Car, Home } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
-import { cn } from '@/lib/utils';
+import { useThemeContext } from '@/lib/theme-provider';
 
-const iconOptions = [
-  { id: 'home', icon: Home },
-  { id: 'car', icon: Car },
-  { id: 'school', icon: GraduationCap },
-  { id: 'flight', icon: Plane },
+const goalIcons = [
+  { id: 'flag', icon: Flag },
   { id: 'computer', icon: Laptop },
-  { id: 'shopping-bag', icon: ShoppingBag },
-  { id: 'card-giftcard', icon: Gift },
-  { id: 'more-horiz', icon: MoreHorizontal },
+  { id: 'favorite', icon: Heart },
+  { id: 'directions-car', icon: Car },
+  { id: 'home', icon: Home },
 ];
 
-const colorOptions = [
-  "#003fb1", "#006c49", "#852b00", "#694100", 
-  "#ba1a1a", "#7A63D2", "#0ea5e9", "#14b8a6"
-];
-
-function GoalContent() {
+function GoalForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const goalId = searchParams.get('goalId');
-
+  const goalId = searchParams.get('whatever');
+  
   const { settings, goals, addGoal, updateGoal, deleteGoal, t } = useBudget();
-  const isFrench = settings.language === 'fr';
+  const { palette } = useThemeContext();
+  const language = settings.language;
+  const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
-  const existing = useMemo(() => goals.find((item) => item.id === goalId), [goalId, goals]);
-
+  const existing = useMemo(() => goals.find((item) => item.id === goalId), [goals, goalId]);
+  
   const [title, setTitle] = useState(existing?.title ?? "");
   const [targetAmount, setTargetAmount] = useState(existing ? String(existing.targetAmount) : "");
   const [savedAmount, setSavedAmount] = useState(existing ? String(existing.savedAmount) : "");
-  const [icon, setIcon] = useState(existing?.icon ?? "flag");
-  const [error, setError] = useState("");
+  const [icon, setIcon] = useState(existing?.icon ?? goalIcons[0].id);
+  const [errors, setErrors] = useState<any>({});
 
   const save = () => {
-    const numTarget = Number(targetAmount.replace(",", "."));
-    const numSaved = Number(savedAmount.replace(",", "."));
+    const target = Number(targetAmount.replace(",", "."));
+    const saved = Number(savedAmount.replace(",", ".")) || 0;
     
-    if (!title.trim()) { setError(label("Title is required", "Le titre est requis")); return; }
-    if (!numTarget || numTarget <= 0) { setError(label("Target amount is required", "L'objectif est requis")); return; }
-
-    const input = { 
-      title: title.trim(), 
-      targetAmount: numTarget, 
-      savedAmount: numSaved || 0,
-      icon, 
-    };
-
+    const newErrors: any = {};
+    if (!title.trim()) newErrors.title = true;
+    if (!target || target <= 0) newErrors.targetAmount = true;
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    const input = { title: title.trim(), targetAmount: target, savedAmount: saved, icon };
     if (existing) updateGoal(existing.id, input);
     else addGoal(input);
     
@@ -60,115 +54,83 @@ function GoalContent() {
   };
 
   const remove = () => {
-    if (window.confirm(label("Delete this goal?", "Supprimer cet objectif ?"))) {
-      deleteGoal(existing!.id);
+    if (existing && window.confirm(label("Delete this goal?", "Supprimer cet objectif ?"))) {
+      deleteGoal(existing.id);
       router.back();
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex items-start justify-center py-12 px-4">
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-background" style={{ backgroundColor: palette.background }}>
+      <div className="h-[62px] flex flex-row items-center justify-between px-5 shrink-0">
+        <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+          <X size={22} color={palette.foreground} />
+        </button>
+        <span className="text-[16px] font-extrabold" style={{ color: palette.foreground }}>
+          {existing ? label("Edit goal", "Modifier l'objectif") : t("addGoal")}
+        </span>
+        <button onClick={save} className="h-10 px-4 rounded-[14px] flex items-center justify-center active:opacity-70" style={{ backgroundColor: palette.primary }}>
+          <span className="text-white text-[14px] font-extrabold">{existing ? label("Save", "Enregistrer") : label("Add", "Ajouter")}</span>
+        </button>
+      </div>
 
-        {/* Header */}
-        <div className="p-6 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9ff]">
-          <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">
-            {existing ? label("Edit Goal", "Modifier l'objectif") : t("addGoal")}
-          </h2>
-          <div className="flex items-center gap-2">
-            {existing && (
-              <button onClick={remove} className="p-2 rounded-lg hover:bg-[#ffdad6] transition-colors">
-                <Trash2 size={20} className="text-[#ba1a1a]" />
-              </button>
-            )}
-            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
-              <X size={20} className="text-[#434654]" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-
-          {/* Title */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Title", "Titre")}</label>
+      <div className="flex-1 overflow-y-auto px-5 pb-[100px] pt-4 max-w-[400px] mx-auto w-full">
+        {/**/}
+        <div className="flex flex-col mb-5">
+          <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{label("Goal Name", "Nom de l'objectif")}</span>
+          <div className="h-[52px] rounded-xl px-4 flex flex-row items-center border" style={{ backgroundColor: palette.surface, borderColor: errors.title ? palette.error : palette.border }}>
             <input
               type="text"
               value={title}
-              onChange={(e) => { setTitle(e.target.value); setError(""); }}
-              placeholder={label("e.g. New Car", "ex: Nouvelle voiture")}
-              className="w-full px-4 py-3 rounded-lg border border-[#e5e7eb] bg-white text-[16px] font-medium text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1] transition-all placeholder:text-[#c3c5d7]"
+              onChange={(e) => { setTitle(e.target.value); setErrors((p: any) => ({...p, title: false})); }}
+              placeholder={label("e.g. New Laptop", "ex: Nouvel ordi")}
+              className="flex-1 bg-transparent border-none outline-none text-[15px] font-bold h-full"
+              style={{ color: palette.foreground }}
             />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Target Amount */}
-            <div>
-              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Target Amount", "Montant cible")}</label>
-              <div className="flex items-center px-4 py-3 rounded-lg border border-[#e5e7eb] focus-within:border-[#003fb1] focus-within:ring-1 focus-within:ring-[#003fb1] transition-all bg-white">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={targetAmount}
-                  onChange={(e) => { setTargetAmount(e.target.value); setError(""); }}
-                  placeholder="0"
-                  className="flex-1 text-[16px] font-semibold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
-                />
-                <span className="text-[14px] font-semibold text-[#434654]">DH</span>
-              </div>
-            </div>
-
-            {/* Current Amount */}
-            <div>
-              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Saved Amount", "Montant épargné")}</label>
-              <div className="flex items-center px-4 py-3 rounded-lg border border-[#e5e7eb] focus-within:border-[#003fb1] focus-within:ring-1 focus-within:ring-[#003fb1] transition-all bg-white">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={savedAmount}
-                  onChange={(e) => { setSavedAmount(e.target.value); setError(""); }}
-                  placeholder="0"
-                  className="flex-1 text-[16px] font-semibold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
-                />
-                <span className="text-[14px] font-semibold text-[#434654]">DH</span>
-              </div>
-            </div>
-          </div>
-
-          {error && <p className="text-[13px] text-[#ba1a1a] font-semibold">{error}</p>}
-
-          {/* Icon Selector */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Icon", "Icône")}</label>
-            <div className="grid grid-cols-8 gap-2">
-              {iconOptions.map((opt) => {
-                const Icon = opt.icon;
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => setIcon(opt.id)}
-                    className={cn(
-                      "aspect-square rounded-lg flex items-center justify-center border transition-all",
-                      icon === opt.id
-                        ? "bg-[#003fb1]/5 border-[#003fb1] ring-1 ring-[#003fb1] text-[#003fb1]"
-                        : "bg-white border-[#e5e7eb] text-[#434654] hover:border-[#003fb1]/30"
-                    )}
-                  >
-                    <Icon size={20} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <button
-            onClick={save}
-            className="w-full mt-4 py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
-          >
-            {label("Save Goal", "Enregistrer l'objectif")}
-          </button>
         </div>
+
+        {/**/}
+        <div className="flex flex-col mb-5">
+          <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{label("Target Amount", "Montant cible")}</span>
+          <div className="h-[70px] rounded-2xl px-5 flex flex-row items-center justify-between border" style={{ backgroundColor: palette.surface, borderColor: errors.targetAmount ? palette.error : palette.border }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={targetAmount}
+              onChange={(e) => { setTargetAmount(e.target.value); setErrors((p: any) => ({...p, targetAmount: false})); }}
+              placeholder="0"
+              className="flex-1 bg-transparent border-none outline-none text-[32px] font-extrabold text-left h-full"
+              style={{ color: palette.foreground }}
+            />
+            <span className="font-extrabold text-[16px] ml-2" style={{ color: palette.muted }}>DH</span>
+          </div>
+        </div>
+
+        {/**/}
+        <div className="flex flex-col mb-5">
+          <span className="text-[13px] font-extrabold ml-1 mb-2" style={{ color: palette.foreground }}>{label("Already Saved", "Déjà économisé")}</span>
+          <div className="h-[70px] rounded-2xl px-5 flex flex-row items-center justify-between border" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={savedAmount}
+              onChange={(e) => setSavedAmount(e.target.value)}
+              placeholder="0"
+              className="flex-1 bg-transparent border-none outline-none text-[32px] font-extrabold text-left h-full"
+              style={{ color: palette.primary }}
+            />
+            <span className="font-extrabold text-[16px] ml-2" style={{ color: palette.muted }}>DH</span>
+          </div>
+        </div>
+
+        {/**/}
+        {existing && (
+          <button onClick={remove} className="mt-4 flex flex-row items-center justify-center gap-2 h-[52px] rounded-xl border" style={{ borderColor: '#ffdad6', backgroundColor: '#fff' }}>
+            <Trash2 size={18} color={palette.error} />
+            <span className="text-[14px] font-bold" style={{ color: palette.error }}>{label("Delete Goal", "Supprimer l'objectif")}</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -176,8 +138,8 @@ function GoalContent() {
 
 export default function GoalPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8f9ff]" />}>
-      <GoalContent />
+    <Suspense fallback={<div />}>
+      <GoalForm />
     </Suspense>
   );
 }
