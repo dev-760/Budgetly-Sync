@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  syncState    SyncState?
+}
+
+model SyncState {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id])
+  state     String   // JSON string of BudgetData
+  updatedAt DateTime @updatedAt
+}
