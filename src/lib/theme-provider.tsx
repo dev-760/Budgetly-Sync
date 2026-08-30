@@ -30,7 +30,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const visualThemes: Record<VisualThemeId, { primary: string; primaryLight: string }> = {
+export const visualThemes: Record<VisualThemeId, { primary: string; primaryLight: string }> = {
   ocean: { primary: "#1A56DB", primaryLight: "#EAF0FF" },
   violet: { primary: "#7C3AED", primaryLight: "#EDE9FE" },
   sage: { primary: "#059669", primaryLight: "#D1FAE5" },
@@ -98,4 +98,4 @@ export function useThemeContext() {
     throw new Error("useThemeContext must be used within a ThemeProvider");
   }
   return context;
-}export const visualThemes = [{id: 'ocean', label: 'Ocean Blue'}, {id: 'violet', label: 'Ultra Violet'}, {id: 'sage', label: 'Sage Green'}];
+}
