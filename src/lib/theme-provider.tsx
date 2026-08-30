@@ -98,4 +98,4 @@ export function useThemeContext() {
     throw new Error("useThemeContext must be used within a ThemeProvider");
   }
   return context;
-}
+}export const visualThemes = [{id: 'ocean', label: 'Ocean Blue'}, {id: 'violet', label: 'Ultra Violet'}, {id: 'sage', label: 'Sage Green'}];

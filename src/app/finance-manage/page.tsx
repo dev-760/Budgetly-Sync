@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
-  X, Landmark, User, CreditCard as CardIcon, Wallet, Edit2, Trash2, CheckCircle, SwapHorizontal as SwapHoriz, RefreshCw as RepeatIcon
+  X, Landmark, User, CreditCard as CardIcon, Wallet, Edit2, Trash2, CheckCircle, ArrowRightLeft as SwapHoriz, RefreshCw as RepeatIcon
 } from "lucide-react";
 import { useThemeContext } from "@/lib/theme-provider";
 import { useBudget } from "@/lib/budget-store";

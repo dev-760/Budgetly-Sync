@@ -10,15 +10,26 @@ generator client {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
-  passwordHash String
-  syncState    SyncState?
+  username    String    @id
+  tokenHash   String    @map("token_hash")
+  passkeys    String    @default("[]")
+  syncData    String?   @map("sync_data") // Stores the JSON string of BudgetData
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  
+  sessions    Session[]
+
+  @@map("users")
 }
 
-model SyncState {
-  userId    String   @id
-  user      User     @relation(fields: [userId], references: [id])
-  state     String   // JSON string of BudgetData
-  updatedAt DateTime @updatedAt
+model Session {
+  id        String   @id
+  username  String
+  user      User     @relation(fields: [username], references: [username], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
+  @@index([username])
+  @@index([expiresAt])
 }

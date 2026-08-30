@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarMonth, TrendingUp, TrendingDown, Flag, ChevronRight, PieChart } from 'lucide-react';
+import { Calendar, TrendingUp, TrendingDown, Flag, ChevronRight, PieChart } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
 import { Card, RoundIcon, SectionTitle } from '@/components/budget-ui';

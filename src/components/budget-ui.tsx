@@ -277,4 +277,4 @@ export function FormattedDate({ date, language }: { date: string; language: "en"
       {formatDate(date, language)}
     </span>
   );
-}
+}export const defaultIcons: Record<string, any> = {};

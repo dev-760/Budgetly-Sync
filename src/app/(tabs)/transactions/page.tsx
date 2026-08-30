@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Plus, Label, X, Receipt, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Search, Plus, Tag, X, Receipt, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
 import { Card, EmptyState, MoneyText, RoundIcon, FormattedDate } from '@/components/budget-ui';
