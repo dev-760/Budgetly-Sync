@@ -236,7 +236,7 @@ export default function InsightsPage() {
                         "w-full rounded-t-sm transition-colors", 
                         isCurrent ? "bg-[#003fb1] group-hover:bg-[#003fb1]/80" : "bg-[#003fb1]/40 group-hover:bg-[#003fb1]/60"
                       )} 
-                      style={{ height: ${height}% }}
+                      style={{ height: `${height}%` }}
                     ></div>
                     <span className={cn("mt-2 text-[11px] font-bold tracking-[0.05em]", isCurrent ? "text-[#003fb1]" : "text-[#434654]")}>{months[i]}</span>
                   </div>

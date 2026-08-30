@@ -10,8 +10,9 @@ import { FormattedDate } from '@/components/budget-ui';
 
 export default function FinanceManagePage() {
   const router = useRouter();
-  const { settings, recurring, buckets, addRecurring, deleteRecurring, addTransfer, t } = useBudget();
-  const isFrench = settings.language === 'fr';
+  const { settings, recurring, buckets, upsertRecurringIncome, removeRecurringIncome, upsertTransfer, t } = useBudget();
+  const language = settings.language;
+  const isFrench = language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
   const [mode, setMode] = useState<'income'|'transfer'|'loan'|'subscription'|'lend'>('income');
@@ -31,18 +32,17 @@ export default function FinanceManagePage() {
 
     if (mode === 'transfer') {
       if (fromBucket === toBucket) { setError(label("Cannot transfer to same account", "Impossible de transférer vers le même compte")); return; }
-      addTransfer({ fromBucketId: fromBucket, toBucketId: toBucket, amount: numAmount, date });
+      upsertTransfer({ fromBucketId: fromBucket as any, toBucketId: toBucket as any, amount: numAmount });
       router.back();
       return;
     }
 
     // For simplicity, just add as recurring for now
-    addRecurring({
+    upsertRecurringIncome({
       title: title.trim(),
       amount: numAmount,
       frequency: 'monthly',
-      nextDueDate: date,
-      type: mode as any
+      nextDueDate: date
     });
     router.back();
   };
@@ -188,7 +188,7 @@ export default function FinanceManagePage() {
                       </div>
                       <button 
                         onClick={() => {
-                          if(window.confirm(label("Delete this item?", "Supprimer cet élément ?"))) deleteRecurring(item.id);
+                          if(window.confirm(label("Delete this item?", "Supprimer cet élément ?"))) removeRecurringIncome(item.id);
                         }}
                         className="p-2 text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-colors"
                       >

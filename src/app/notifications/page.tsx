@@ -23,7 +23,7 @@ const colorMap = {
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { settings, notifications, markNotificationRead, markAllNotificationsRead, t } = useBudget();
+  const { settings, notifications, markNotificationsRead, t } = useBudget();
   const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
@@ -40,9 +40,9 @@ export default function NotificationsPage() {
             <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{t("notifications")}</h1>
           </div>
           
-          {notifications.some(n => !n.read) && (
+          {notifications.some(n => !n.isRead) && (
             <button
-              onClick={markAllNotificationsRead}
+              onClick={markNotificationsRead}
               className="flex items-center gap-2 px-4 py-2 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#003fb1] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors"
             >
               <CheckCircle2 size={16} />
@@ -68,10 +68,10 @@ export default function NotificationsPage() {
                 return (
                   <button
                     key={notif.id}
-                    onClick={() => !notif.read && markNotificationRead(notif.id)}
+                    onClick={() => !notif.isRead && markNotificationsRead()}
                     className={cn(
                       "w-full p-5 flex items-start gap-4 text-left transition-colors",
-                      !notif.read ? "bg-[#f3f3fe] hover:bg-[#e6eeff]" : "bg-white hover:bg-[#f8f9ff]"
+                      !notif.isRead ? "bg-[#f3f3fe] hover:bg-[#e6eeff]" : "bg-white hover:bg-[#f8f9ff]"
                     )}
                   >
                     <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", colors)}>
@@ -81,22 +81,22 @@ export default function NotificationsPage() {
                     <div className="flex-1 pt-1">
                       <h3 className={cn(
                         "text-[14px] mb-1",
-                        !notif.read ? "font-bold text-[#191b23]" : "font-semibold text-[#434654]"
+                        !notif.isRead ? "font-bold text-[#191b23]" : "font-semibold text-[#434654]"
                       )}>
                         {notif.title}
                       </h3>
                       <p className={cn(
                         "text-[13px] leading-[18px]",
-                        !notif.read ? "text-[#434654]" : "text-[#737686]"
+                        !notif.isRead ? "text-[#434654]" : "text-[#737686]"
                       )}>
                         {notif.body}
                       </p>
                       <p className="text-[11px] font-bold tracking-[0.05em] text-[#737686] uppercase mt-2">
-                        <FormattedDate date={notif.date} language={settings.language as any} />
+                        <FormattedDate date={notif.createdAt} language={settings.language as any} />
                       </p>
                     </div>
 
-                    {!notif.read && (
+                    {!notif.isRead && (
                       <div className="w-2.5 h-2.5 rounded-full bg-[#003fb1] mt-2 shrink-0 shadow-sm" />
                     )}
                   </button>

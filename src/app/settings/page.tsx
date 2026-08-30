@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 export default function SettingsPage() {
   const router = useRouter();
   const { palette } = useThemeContext();
-  const { settings, setLanguage, setVisualTheme, toggleNotifications, clearLocalData, t } = useBudget();
+  const { settings, setLanguage, setAppearancePreferences, toggleNotifications, clearLocalData, t } = useBudget();
   const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
@@ -60,10 +60,10 @@ export default function SettingsPage() {
               {(Object.entries(visualThemes) as [string, typeof visualThemes[keyof typeof visualThemes]][]).map(([id, theme]) => (
                 <button
                   key={id}
-                  onClick={() => setVisualTheme(id as any)}
+                  onClick={() => setAppearancePreferences({ visualTheme: id as any })}
                   className={cn(
                     "p-4 rounded-xl border-2 transition-all text-center",
-                    settings.visualTheme === id
+                    settings.appearance.visualTheme === id
                       ? "border-[#003fb1] bg-[#003fb1]/5 shadow-sm"
                       : "border-[#e5e7eb] hover:border-[#003fb1]/30"
                   )}

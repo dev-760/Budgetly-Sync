@@ -9,11 +9,11 @@ import { cn } from '@/lib/utils';
 
 export default function MonthlyLimitPage() {
   const router = useRouter();
-  const { settings, finance, setMonthlyLimit, t } = useBudget();
+  const { settings, finance, setMonthlySpendingLimit, t } = useBudget();
   const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
-  const currentLimit = finance.monthlyLimit || 0;
+  const currentLimit = settings.monthlySpendingLimit || 0;
   const [limit, setLimitAmount] = useState(currentLimit ? String(currentLimit) : "");
   const [error, setError] = useState("");
 
@@ -21,12 +21,12 @@ export default function MonthlyLimitPage() {
     const numLimit = Number(limit.replace(",", "."));
     if (!numLimit || numLimit <= 0) { setError(label("Amount is required", "Le montant est requis")); return; }
     
-    setMonthlyLimit(numLimit);
+    setMonthlySpendingLimit(numLimit);
     router.back();
   };
 
   const clear = () => {
-    setMonthlyLimit(0);
+    setMonthlySpendingLimit(0);
     router.back();
   };
 

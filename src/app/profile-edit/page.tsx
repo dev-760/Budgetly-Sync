@@ -15,8 +15,10 @@ export default function ProfileEditPage() {
   const [imageUri, setImageUri] = useState(settings.profileImageUri || "");
 
   const save = () => {
-    if (name.trim()) setDisplayName(name.trim());
-    if (imageUri.trim()) setProfileImage(imageUri.trim());
+    updateProfile({
+      displayName: name.trim() || undefined,
+      profileImageUri: imageUri.trim() || undefined
+    });
     router.back();
   };
 

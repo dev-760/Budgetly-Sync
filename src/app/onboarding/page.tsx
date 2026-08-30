@@ -6,11 +6,11 @@ import { ShieldCheck, ChevronRight, Check } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
 import { Language } from '@/lib/budget-data';
 import { cn } from '@/lib/utils';
-import { LogoMark } from '@/components/budget-ui';
+import { BrandMark } from '@/components/budget-ui';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { settings, setLanguage, setDisplayName, setOnboardingComplete } = useBudget();
+  const { settings, setLanguage, updateProfile, completeOnboarding } = useBudget();
   const [step, setStep] = useState(1);
   
   const [tempLang, setTempLang] = useState<Language>(settings.language);
@@ -24,8 +24,8 @@ export default function OnboardingPage() {
       setLanguage(tempLang);
     }
     if (step === 3) {
-      if (tempName.trim()) setDisplayName(tempName.trim());
-      setOnboardingComplete();
+      if (tempName.trim()) updateProfile({ displayName: tempName.trim() });
+      completeOnboarding();
       router.replace('/');
       return;
     }
@@ -38,7 +38,7 @@ export default function OnboardingPage() {
       {/* Top Logo */}
       <div className="absolute top-10 left-10 flex items-center gap-3">
         <div className="w-10 h-10 bg-[#003fb1] rounded-xl flex items-center justify-center shadow-md">
-          <LogoMark fill="white" width={24} height={24} />
+          <BrandMark fill="white" width={24} height={24} />
         </div>
         <span className="text-[20px] font-extrabold text-[#191b23] tracking-[-0.02em]">Budgetly</span>
       </div>
