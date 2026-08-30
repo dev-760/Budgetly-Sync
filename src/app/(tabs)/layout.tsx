@@ -7,7 +7,7 @@ import { Home, List, PieChart, Wallet, TrendingUp, User } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
 import { cn } from '@/lib/utils';
-import { AuthCheck } from '@/components/auth-check';
+import { OnboardingCheck } from '@/components/auth-check';
 import { BrandLockup } from '@/components/budget-ui';
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
@@ -25,7 +25,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <AuthCheck>
+    <OnboardingCheck>
       <div className="flex h-screen overflow-hidden">
         {/* Desktop Sidebar (hidden on mobile, visible on md+) */}
         <aside 
@@ -122,6 +122,6 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </div>
       </div>
-    </AuthCheck>
+    </OnboardingCheck>
   );
 }

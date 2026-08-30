@@ -93,6 +93,21 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6 max-w-2xl mx-auto">
+        {/* Cloud Sync */}
+        <section>
+          <SectionTitle title={label("Cloud Sync", "Synchronisation Cloud")} />
+          <Card className="flex items-center gap-3 mb-4 bg-blue-50/50">
+            <RoundIcon icon={Sparkles} size={36} color={palette.primary} background={`${palette.primary}20`} />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold" style={{ color: palette.foreground }}>{label("Backup and Sync Devices", "Sauvegarder et Synchroniser")}</h4>
+              <p className="text-xs mt-1" style={{ color: palette.muted }}>{label("Budgetly is local-first. You can optionally securely back up your data to the cloud.", "Budgetly est local en priorité. Vous pouvez optionnellement sauvegarder vos données dans le cloud.")}</p>
+            </div>
+            <Button size="small" onPress={() => router.push('/auth')}>
+              {label("Set up Sync", "Configurer la synchronisation")}
+            </Button>
+          </Card>
+        </section>
+
         {/* Appearance */}
         <section>
           <SectionTitle title={label("Appearance", "Apparence")} />

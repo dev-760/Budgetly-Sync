@@ -9,6 +9,11 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = {
   title: "Budgetly - Personal Finance for Students",
   description: "A modern personal finance and budgeting application built for students",
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/favicon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

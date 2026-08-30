@@ -1,22 +1,35 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { storage } from '@/lib/storage';
+import { useBudget } from '@/lib/budget-store';
 
-export function AuthCheck({ children }: { children: React.ReactNode }) {
+export function OnboardingCheck({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { hydrated, settings } = useBudget();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const jwt = storage.getItem('budgetly_jwt');
-    if (!jwt) {
-      router.push('/auth');
-    }
-  }, [router]);
+    setIsMounted(true);
+  }, []);
 
-  const jwt = storage.getItem('budgetly_jwt');
-  if (!jwt) {
-    return null; // or render a loading state
+  useEffect(() => {
+    if (hydrated && !settings.onboardingComplete) {
+      router.push('/onboarding');
+    }
+  }, [hydrated, settings.onboardingComplete, router]);
+
+  if (!isMounted || !hydrated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-sm opacity-60">Loading Budgetly...</p>
+      </div>
+    );
+  }
+
+  if (!settings.onboardingComplete) {
+    return null; // Don't render layout until redirect happens
   }
 
   return <>{children}</>;
