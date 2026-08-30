@@ -7,7 +7,7 @@ import { useBudget } from '@/lib/budget-store';
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { settings, setDisplayName, setProfileImage, t } = useBudget();
+  const { settings, updateProfile, t } = useBudget();
   const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 

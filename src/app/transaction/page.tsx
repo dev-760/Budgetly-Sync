@@ -152,7 +152,7 @@ function TransactionContent() {
               {["cash", "card"].map((method) => (
                 <button
                   key={method}
-                  onClick={() => setPaymentMethod(method)}
+                  onClick={() => setPaymentMethod(method as "cash" | "card")}
                   className={cn(
                     "flex-1 py-3 rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors border",
                     paymentMethod === method

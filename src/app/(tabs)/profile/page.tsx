@@ -169,7 +169,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="divide-y divide-[#e5e7eb]">
                   {goals.map((goal) => {
-                    const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+                    const pct = Math.min((goal.savedAmount / goal.targetAmount) * 100, 100);
                     return (
                       <button
                         key={goal.id}

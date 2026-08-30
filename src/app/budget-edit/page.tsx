@@ -22,7 +22,7 @@ function BudgetEditContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get('id');
 
-  const { settings, budgets, setBudget, removeBudget, t, categoryName } = useBudget();
+  const { settings, budgets, setBudget, t, categoryName } = useBudget();
   const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
@@ -37,19 +37,14 @@ function BudgetEditContent() {
     const numLimit = Number(limit.replace(",", "."));
     if (!numLimit || numLimit <= 0) { setError(label("Limit amount is required", "La limite est requise")); return; }
 
-    setBudget({
-      id: categoryId,
-      limit: numLimit,
-      color,
-      icon: categoryId
-    });
+    setBudget(categoryId, numLimit);
     
     router.back();
   };
 
   const remove = () => {
     if (window.confirm(label("Delete this budget?", "Supprimer ce budget ?"))) {
-      removeBudget(existing!.id);
+      setBudget(existing!.id, 0); // Setting limit to 0 logically removes it
       router.back();
     }
   };
@@ -79,7 +74,7 @@ function BudgetEditContent() {
 
           {/* Limit Amount */}
           <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("monthlyLimit")}</label>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Monthly Limit", "Limite mensuelle")}</label>
             <div className="flex items-center gap-3">
               <input
                 type="text"
@@ -132,7 +127,7 @@ function BudgetEditContent() {
 
           {/* Color Picker */}
           <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{t("color")}</label>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Color", "Couleur")}</label>
             <div className="flex flex-wrap gap-3">
               {colorOptions.map((c) => (
                 <button

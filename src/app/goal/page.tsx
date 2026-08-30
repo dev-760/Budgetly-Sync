@@ -35,14 +35,13 @@ function GoalContent() {
 
   const [title, setTitle] = useState(existing?.title ?? "");
   const [targetAmount, setTargetAmount] = useState(existing ? String(existing.targetAmount) : "");
-  const [currentAmount, setCurrentAmount] = useState(existing ? String(existing.currentAmount) : "");
+  const [savedAmount, setSavedAmount] = useState(existing ? String(existing.savedAmount) : "");
   const [icon, setIcon] = useState(existing?.icon ?? "flag");
-  const [color, setColor] = useState(existing?.color ?? "#7A63D2");
   const [error, setError] = useState("");
 
   const save = () => {
     const numTarget = Number(targetAmount.replace(",", "."));
-    const numCurrent = Number(currentAmount.replace(",", "."));
+    const numSaved = Number(savedAmount.replace(",", "."));
     
     if (!title.trim()) { setError(label("Title is required", "Le titre est requis")); return; }
     if (!numTarget || numTarget <= 0) { setError(label("Target amount is required", "L'objectif est requis")); return; }
@@ -50,9 +49,8 @@ function GoalContent() {
     const input = { 
       title: title.trim(), 
       targetAmount: numTarget, 
-      currentAmount: numCurrent || 0,
+      savedAmount: numSaved || 0,
       icon, 
-      color 
     };
 
     if (existing) updateGoal(existing.id, input);
@@ -93,7 +91,7 @@ function GoalContent() {
 
           {/* Title */}
           <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("title")}</label>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Title", "Titre")}</label>
             <input
               type="text"
               value={title}
@@ -106,7 +104,7 @@ function GoalContent() {
           <div className="grid grid-cols-2 gap-4">
             {/* Target Amount */}
             <div>
-              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("targetAmount")}</label>
+              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Target Amount", "Montant cible")}</label>
               <div className="flex items-center px-4 py-3 rounded-lg border border-[#e5e7eb] focus-within:border-[#003fb1] focus-within:ring-1 focus-within:ring-[#003fb1] transition-all bg-white">
                 <input
                   type="text"
@@ -122,13 +120,13 @@ function GoalContent() {
 
             {/* Current Amount */}
             <div>
-              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("savedAmount")}</label>
+              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Saved Amount", "Montant épargné")}</label>
               <div className="flex items-center px-4 py-3 rounded-lg border border-[#e5e7eb] focus-within:border-[#003fb1] focus-within:ring-1 focus-within:ring-[#003fb1] transition-all bg-white">
                 <input
                   type="text"
                   inputMode="decimal"
-                  value={currentAmount}
-                  onChange={(e) => { setCurrentAmount(e.target.value); setError(""); }}
+                  value={savedAmount}
+                  onChange={(e) => { setSavedAmount(e.target.value); setError(""); }}
                   placeholder="0"
                   className="flex-1 text-[16px] font-semibold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
                 />
@@ -141,7 +139,7 @@ function GoalContent() {
 
           {/* Icon Selector */}
           <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{t("icon")}</label>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Icon", "Icône")}</label>
             <div className="grid grid-cols-8 gap-2">
               {iconOptions.map((opt) => {
                 const Icon = opt.icon;
@@ -160,24 +158,6 @@ function GoalContent() {
                   </button>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Color Picker */}
-          <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{t("color")}</label>
-            <div className="flex flex-wrap gap-3">
-              {colorOptions.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className={cn(
-                    "w-10 h-10 rounded-full transition-transform",
-                    color === c ? "ring-2 ring-offset-2 ring-[#003fb1] scale-110" : "hover:scale-110"
-                  )}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
             </div>
           </div>
 

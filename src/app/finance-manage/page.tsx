@@ -32,7 +32,7 @@ export default function FinanceManagePage() {
 
     if (mode === 'transfer') {
       if (fromBucket === toBucket) { setError(label("Cannot transfer to same account", "Impossible de transférer vers le même compte")); return; }
-      upsertTransfer({ fromBucketId: fromBucket as any, toBucketId: toBucket as any, amount: numAmount });
+      upsertTransfer({ from: fromBucket as any, to: toBucket as any, amount: numAmount });
       router.back();
       return;
     }
@@ -93,7 +93,7 @@ export default function FinanceManagePage() {
 
               {mode !== 'transfer' && (
                 <div>
-                  <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("title")}</label>
+                  <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Title", "Titre")}</label>
                   <input
                     type="text"
                     value={title}

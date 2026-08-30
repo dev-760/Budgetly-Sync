@@ -91,7 +91,7 @@ export default function MonthlyLimitPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("monthlyLimit")}</label>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Monthly Limit", "Limite mensuelle")}</label>
             <div className="flex items-center gap-3">
               <input
                 type="text"

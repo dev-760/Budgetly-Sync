@@ -83,13 +83,13 @@ export default function NotificationsPage() {
                         "text-[14px] mb-1",
                         !notif.isRead ? "font-bold text-[#191b23]" : "font-semibold text-[#434654]"
                       )}>
-                        {notif.title}
+                        {t(notif.titleKey as any)}
                       </h3>
                       <p className={cn(
                         "text-[13px] leading-[18px]",
                         !notif.isRead ? "text-[#434654]" : "text-[#737686]"
                       )}>
-                        {notif.body}
+                        {t(notif.bodyKey as any)}
                       </p>
                       <p className="text-[11px] font-bold tracking-[0.05em] text-[#737686] uppercase mt-2">
                         <FormattedDate date={notif.createdAt} language={settings.language as any} />
