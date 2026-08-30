@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyJWT } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-
-const prisma = new PrismaClient().$extends(withAccelerate());
 
 // Maximum payload size for the sync endpoint (1MB)
 const MAX_PAYLOAD_SIZE = 1024 * 1024;
