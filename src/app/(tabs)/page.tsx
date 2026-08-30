@@ -57,10 +57,13 @@ export default function HomePage() {
 
       {/* Safe to Spend Hero */}
       <div 
-        className="rounded-[24px] p-[22px] mb-4 shadow-xl overflow-hidden"
-        style={{ backgroundColor: palette.primary, shadowColor: palette.primary }}
+        className="rounded-[24px] p-[22px] mb-4 overflow-hidden relative"
+        style={{ 
+          backgroundColor: palette.primary, 
+          boxShadow: `0 16px 32px -8px ${palette.primary}80` 
+        }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center relative z-10">
           <div>
             <p className="text-[13px] font-bold text-[#DDE6FF]">{t("safeToSpend")}</p>
             <p className="text-xs mt-1 leading-[17px] max-w-[215px] text-[#CCD9FF]">{t("spendToday")}</p>
@@ -107,8 +110,11 @@ export default function HomePage() {
           <div className="w-full flex justify-center mb-4">
             <button
               onClick={() => router.push('/transaction?kind=expense')}
-              className="w-full md:max-w-[300px] h-[52px] rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#1A56DB', boxShadow: '0 10px 15px -3px rgba(26, 86, 219, 0.2)' }}
+              className="w-full md:max-w-[300px] h-[52px] rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ 
+                backgroundColor: palette.primary, 
+                boxShadow: `0 10px 25px -5px ${palette.primary}60` 
+              }}
             >
               <span className="text-sm font-extrabold text-white">{t("addExpense")}</span>
             </button>
@@ -162,10 +168,13 @@ export default function HomePage() {
           {/* Finance Board Shortcut Strip */}
           <button
             onClick={() => router.push('/finance')}
-            className="w-full mt-4 rounded-[24px] p-[22px] shadow-lg text-left transition-opacity hover:opacity-90 block"
-            style={{ backgroundColor: '#172033' }}
+            className="w-full mt-4 rounded-[24px] p-[22px] text-left transition-all hover:scale-[0.98] block relative overflow-hidden"
+            style={{ 
+              backgroundColor: '#172033',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' 
+            }}
           >
-            <div className="flex justify-between items-center mb-3.5">
+            <div className="flex justify-between items-center mb-3.5 relative z-10">
               <div>
                 <h3 className="text-[17px] font-extrabold text-white">{isFrench ? "Vue financière" : "Finance board"}</h3>
                 <p className="text-[13px] mt-1 text-[#8B94A7]">{isFrench ? "Comptes et engagements" : "Accounts & commitments"}</p>

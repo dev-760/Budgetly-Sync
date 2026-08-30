@@ -45,10 +45,11 @@ export function Card({ children, className, style }: { children: React.ReactNode
   const { palette } = useThemeContext();
   return (
     <div 
-      className={cn("rounded-xl p-4", className)}
+      className={cn("rounded-[22px] p-4 transition-all duration-300", className)}
       style={{ 
         backgroundColor: palette.surface, 
         border: `1px solid ${palette.border}`,
+        boxShadow: `0 8px 24px -12px ${palette.foreground}15`,
         ...style 
       }}
     >
@@ -189,7 +190,7 @@ export function Button({
     large: "px-6 py-3 text-lg"
   };
   
-  const variantStyles = {
+  const variantStyles: Record<string, { backgroundColor: string; color: string; hover: string; border?: string }> = {
     primary: {
       backgroundColor: palette.primary,
       color: "#FFFFFF",
