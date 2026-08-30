@@ -2,219 +2,229 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { User, ChevronRight, Globe, Bell, Wallet, Flag, Repeat, Settings, Trash2 } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
-import { Card, SectionTitle, RoundIcon, EmptyState, BrandLockup } from '@/components/budget-ui';
-import { User, ChevronRight, Settings, Flag, RepeatIcon, Trash2, LogOut, Link2 } from 'lucide-react';
+import { formatMoney, Language } from '@/lib/budget-data';
 import { cn } from '@/lib/utils';
-import { Language } from '@/lib/budget-data';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { palette } = useThemeContext();
-  const { settings, goals, recurring, setLanguage, clearLocalData, t } = useBudget();
-
-  const isFrench = settings.language === "fr";
+  const { settings, goals, recurring, setLanguage, toggleNotifications, clearLocalData, t } = useBudget();
+  const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
-  const profileName = settings.displayName || (isFrench ? "Ton profil" : "Your profile");
-  const localProfileSubtitle = isFrench ? "Nom et photo enregistrés sur cet appareil" : "Name and photo stored on this device";
+  const profileName = settings.displayName || label("Your profile", "Ton profil");
 
   const confirmReset = () => {
-    if (window.confirm(isFrench ? "Cette action efface les données financières enregistrées sur cet appareil." : "This erases the finance data saved on this device.")) {
+    if (window.confirm(label(
+      "This erases the finance data saved on this device. Are you sure?",
+      "Cette action efface les données financières enregistrées sur cet appareil. Êtes-vous sûr ?"
+    ))) {
       clearLocalData();
     }
   };
 
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('budgetly_jwt');
-      window.location.reload();
-    }
-  };
-
   return (
-    <div className="min-h-screen pb-24 px-5 pt-4 max-w-lg mx-auto" style={{ backgroundColor: palette.background }}>
-      <div className="flex justify-between items-start mb-6">
+    <div className="flex flex-col w-full">
+      <div className="px-10 py-8 space-y-6">
+
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: palette.foreground }}>
-            {t("profile")}
-          </h1>
-          <p className="text-sm mt-1" style={{ color: palette.muted }}>
-            {t("studentTip")}
-          </p>
+          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{t("profile")}</h1>
+          <p className="text-[14px] leading-[20px] text-[#434654]">{label("Manage your account and preferences", "Gérer votre compte et vos préférences")}</p>
         </div>
-      </div>
 
-      <div className="space-y-6">
-        <button 
-          onClick={() => router.push("/profile-edit")}
-          className="w-full bg-white dark:bg-slate-900 border rounded-3xl p-5 flex items-center gap-4 transition-opacity hover:opacity-80 text-left"
-          style={{ borderColor: palette.border }}
-        >
-          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center overflow-hidden bg-blue-600">
-            {settings.profileImageUri ? (
-              <img src={settings.profileImageUri} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <User size={32} color="#FFFFFF" />
-            )}
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-bold" style={{ color: palette.foreground }}>{profileName}</h2>
-            <p className="text-[13px] mt-1" style={{ color: palette.muted, lineHeight: 1.4 }}>{localProfileSubtitle}</p>
-          </div>
-          <div className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 text-xs font-bold dark:bg-blue-900/30">
-            {isFrench ? "Modifier" : "Edit"}
-          </div>
-          <ChevronRight size={24} color={palette.muted} />
-        </button>
+        <div className="grid grid-cols-12 gap-6">
 
-        <section>
-          <SectionTitle 
-            title={t("preferences")} 
-            action={isFrench ? "Réglages" : "Settings"} 
-            onPress={() => router.push("/settings")} 
-          />
-          <Card className="p-2">
-            <div className="px-3 pt-2 pb-1">
-              <span className="text-xs font-bold" style={{ color: palette.muted }}>{t("language")}</span>
-            </div>
-            <div className="flex gap-2 p-3">
-              {(["en", "fr"] as Language[]).map((lang) => (
+          {/* Left Column */}
+          <div className="col-span-12 xl:col-span-8 space-y-6">
+
+            {/* Profile Card */}
+            <button
+              onClick={() => router.push('/profile-edit')}
+              className="w-full bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb] flex items-center gap-5 text-left hover:border-[#003fb1]/30 transition-colors group"
+            >
+              <div className="w-16 h-16 rounded-xl bg-[#003fb1] flex items-center justify-center shrink-0">
+                {settings.profileImageUri ? (
+                  <img src={settings.profileImageUri} alt="Profile" className="w-full h-full rounded-xl object-cover" />
+                ) : (
+                  <User size={28} className="text-white" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-[18px] font-semibold text-[#191b23]">{profileName}</h2>
+                <p className="text-[14px] text-[#434654] mt-1">{label("Name and photo stored locally", "Nom et photo enregistrés localement")}</p>
+              </div>
+              <span className="px-3 py-1.5 bg-[#ededf8] rounded-lg text-[11px] font-bold tracking-[0.05em] text-[#003fb1] uppercase">{label("Edit", "Modifier")}</span>
+              <ChevronRight size={20} className="text-[#434654]" />
+            </button>
+
+            {/* Preferences */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+              <div className="p-6 border-b border-[#e5e7eb] flex justify-between items-center">
+                <h3 className="text-[18px] font-semibold text-[#191b23]">{t("preferences")}</h3>
                 <button
-                  key={lang}
-                  onClick={() => setLanguage(lang)}
-                  className={cn(
-                    "flex-1 py-3 rounded-xl border text-sm font-bold transition-colors"
-                  )}
-                  style={{
-                    backgroundColor: settings.language === lang ? palette.surface : "transparent",
-                    borderColor: settings.language === lang ? palette.border : "transparent",
-                    color: settings.language === lang ? palette.primary : palette.muted
-                  }}
+                  onClick={() => router.push('/settings')}
+                  className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.05em] text-[#003fb1] uppercase hover:text-[#1a56db] transition-colors"
                 >
-                  {lang === "en" ? t("english") : t("french")}
+                  <Settings size={14} />
+                  {label("All Settings", "Tous les réglages")}
                 </button>
-              ))}
+              </div>
+
+              {/* Language */}
+              <div className="p-6 border-b border-[#e5e7eb]">
+                <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{t("language")}</p>
+                <div className="flex gap-3">
+                  {(["en", "fr"] as Language[]).map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => setLanguage(lang)}
+                      className={cn(
+                        "flex-1 py-3 rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors border",
+                        settings.language === lang
+                          ? "bg-[#003fb1] text-white border-[#003fb1]"
+                          : "bg-[#ededf8] text-[#434654] border-[#e5e7eb] hover:bg-[#e2e1ed]"
+                      )}
+                    >
+                      {lang === "en" ? "English" : "Français"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notifications */}
+              <div className="p-6 flex items-center justify-between border-b border-[#e5e7eb]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#003fb1]/10 flex items-center justify-center">
+                    <Bell size={20} className="text-[#003fb1]" />
+                  </div>
+                  <span className="text-[14px] font-medium text-[#191b23]">{t("notificationsEnabled")}</span>
+                </div>
+                <button
+                  onClick={toggleNotifications}
+                  className={cn(
+                    "w-12 h-7 rounded-full transition-colors relative",
+                    settings.notificationsEnabled ? "bg-[#003fb1]" : "bg-[#c3c5d7]"
+                  )}
+                >
+                  <div className={cn(
+                    "w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm",
+                    settings.notificationsEnabled ? "left-6" : "left-1"
+                  )} />
+                </button>
+              </div>
+
+              {/* Currency */}
+              <div className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#006c49]/10 flex items-center justify-center">
+                    <Wallet size={20} className="text-[#006c49]" />
+                  </div>
+                  <span className="text-[14px] font-medium text-[#191b23]">{t("currency")}</span>
+                </div>
+                <span className="text-[13px] tracking-[0.02em] font-semibold text-[#434654]">MAD · DH</span>
+              </div>
             </div>
-            
-            <div className="h-px mx-3" style={{ backgroundColor: palette.border }} />
-            
-            <button
-              onClick={() => router.push("/settings")}
-              className="flex items-center justify-between w-full p-3 transition-opacity hover:opacity-80"
-            >
-              <div className="flex items-center gap-3">
-                <RoundIcon icon={Settings} size={36} color="#10B981" background="#E7F7F1" />
-                <span className="text-sm font-bold" style={{ color: palette.foreground }}>{isFrench ? "Plus de réglages" : "More settings"}</span>
-              </div>
-              <ChevronRight size={24} color={palette.muted} />
-            </button>
-          </Card>
-        </section>
 
-        <section>
-          <SectionTitle title="Cloud Sync" />
-          <Card className="p-2">
-            <button
-              onClick={() => router.push("/auth")}
-              className="flex items-center justify-between w-full p-3 transition-opacity hover:opacity-80"
-            >
-              <div className="flex items-center gap-3">
-                <RoundIcon icon={Link2} size={36} color="#10B981" background="#E7F7F1" />
-                <div className="text-left">
-                  <span className="text-sm font-bold block" style={{ color: palette.foreground }}>Backup & Sync</span>
-                  <span className="text-xs mt-1 block" style={{ color: palette.muted }}>Use across devices with Passkey</span>
-                </div>
-              </div>
-              <ChevronRight size={24} color={palette.muted} />
-            </button>
-          </Card>
-        </section>
-
-        <section>
-          <SectionTitle 
-            title={t("goals")} 
-            action={t("addGoal")} 
-            onPress={() => router.push("/goal")} 
-          />
-          <Card className="divide-y divide-gray-100 dark:divide-slate-800 py-1">
-            {goals.length ? goals.map((goal) => (
-              <button 
-                key={goal.id} 
-                onClick={() => router.push("/goal")}
-                className="w-full flex items-center gap-3 py-3 px-4 text-left transition-opacity hover:opacity-80"
+            {/* Danger Zone */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-[#ffdad6]">
+              <h3 className="text-[14px] font-semibold text-[#ba1a1a] mb-3">{label("Danger Zone", "Zone de danger")}</h3>
+              <button
+                onClick={confirmReset}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#ffdad6] text-[#93000a] rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#ffb4ab] transition-colors"
               >
-                <RoundIcon icon={Flag} size={40} color="#7A63D2" background="#EEEAFE" />
-                <div className="flex-1">
-                  <span className="text-sm font-bold block" style={{ color: palette.foreground }}>{goal.title}</span>
-                  <span className="text-xs mt-1 block" style={{ color: palette.muted }}>
-                    {goal.savedAmount.toLocaleString(isFrench ? "fr-MA" : "en-US")} / {goal.targetAmount.toLocaleString(isFrench ? "fr-MA" : "en-US")} DH
-                  </span>
-                </div>
-                <ChevronRight size={20} color={palette.muted} />
+                <Trash2 size={16} />
+                {t("clearLocalData")}
               </button>
-            )) : (
-              <EmptyState 
-                icon={Flag} 
-                title={isFrench ? "Ton premier objectif" : "Your first goal"} 
-                description={isFrench ? "Ajoute un objectif pour visualiser ta progression ici." : "Add a goal to see your progress here."} 
-              />
-            )}
-          </Card>
-        </section>
+            </div>
+          </div>
 
-        <section>
-          <SectionTitle title={t("recurringItems")} />
-          <Card className="divide-y divide-gray-100 dark:divide-slate-800 py-1">
-            {recurring.length ? recurring.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 py-3 px-4">
-                <RoundIcon icon={RepeatIcon} size={40} color="#F59E0B" background="#FFF3D8" />
-                <div className="flex-1">
-                  <span className="text-sm font-bold block" style={{ color: palette.foreground }}>{item.title}</span>
-                  <span className="text-xs mt-1 block" style={{ color: palette.muted }}>
-                    {item.amount.toLocaleString(isFrench ? "fr-MA" : "en-US")} DH · {t("recurring")}
-                  </span>
-                </div>
+          {/* Right Column */}
+          <div className="col-span-12 xl:col-span-4 space-y-6">
+
+            {/* Goals */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+              <div className="p-5 border-b border-[#e5e7eb] flex justify-between items-center">
+                <h3 className="text-[18px] font-semibold text-[#191b23]">{t("goals")}</h3>
+                <button
+                  onClick={() => router.push('/goal')}
+                  className="text-[11px] font-bold tracking-[0.05em] text-[#003fb1] uppercase hover:text-[#1a56db]"
+                >
+                  {t("addGoal")}
+                </button>
               </div>
-            )) : (
-              <EmptyState 
-                icon={RepeatIcon} 
-                title={isFrench ? "Pas encore de paiement régulier" : "No recurring payments yet"} 
-                description={isFrench ? "Les dépenses régulières apparaîtront ici." : "Regular expenses will appear here."} 
-              />
-            )}
-          </Card>
-        </section>
+              {goals.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Flag size={36} className="text-[#c3c5d7] mx-auto mb-3" />
+                  <p className="text-[13px] text-[#434654]">{label("No goals yet", "Aucun objectif")}</p>
+                  <button
+                    onClick={() => router.push('/goal')}
+                    className="mt-3 px-4 py-2 bg-[#003fb1] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold"
+                  >
+                    {label("Create Goal", "Créer un objectif")}
+                  </button>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#e5e7eb]">
+                  {goals.map((goal) => {
+                    const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+                    return (
+                      <button
+                        key={goal.id}
+                        onClick={() => router.push(`/goal?goalId=${goal.id}`)}
+                        className="w-full p-4 text-left hover:bg-[#f3f3fe] transition-colors flex items-center gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-[#ededf8] flex items-center justify-center">
+                          <Flag size={20} className="text-[#003fb1]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-[13px] font-semibold text-[#191b23]">{goal.title}</p>
+                          <div className="w-full bg-[#ededf8] h-1.5 rounded-full overflow-hidden mt-2">
+                            <div className="h-full rounded-full bg-[#003fb1]" style={{ width: `${pct}%` }}></div>
+                          </div>
+                        </div>
+                        <ChevronRight size={16} className="text-[#434654]" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-        <div className="pt-4 flex flex-col items-center gap-6">
-          <button
-            onClick={confirmReset}
-            className="flex items-center gap-2 py-2 px-4 transition-opacity hover:opacity-80"
-          >
-            <Trash2 size={18} color="#ef4444" />
-            <span className="text-[13px] font-bold text-red-500">{t("clearLocalData")}</span>
-          </button>
-          
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 py-2 px-4 transition-opacity hover:opacity-80"
-          >
-            <LogOut size={18} color={palette.muted} />
-            <span className="text-[13px] font-bold" style={{ color: palette.muted }}>Logout</span>
-          </button>
-        </div>
+            {/* Recurring */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+              <div className="p-5 border-b border-[#e5e7eb]">
+                <h3 className="text-[18px] font-semibold text-[#191b23]">{t("recurringItems")}</h3>
+              </div>
+              {recurring.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Repeat size={36} className="text-[#c3c5d7] mx-auto mb-3" />
+                  <p className="text-[13px] text-[#434654]">{label("No recurring payments", "Aucun paiement régulier")}</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#e5e7eb]">
+                  {recurring.map((item) => (
+                    <div key={item.id} className="p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-[#f59e0b]/10 flex items-center justify-center">
+                        <Repeat size={20} className="text-[#f59e0b]" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[13px] font-semibold text-[#191b23]">{item.title}</p>
+                        <p className="text-[11px] text-[#434654] mt-0.5 tabular-nums">{formatMoney(item.amount, settings.language as any)} · {t("recurring")}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-        <div className="pt-8 pb-4 flex flex-col items-center gap-3">
-          <BrandLockup compact />
-          <a 
-            href="https://github.com/dev-760"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[13px] font-bold transition-opacity hover:opacity-80"
-            style={{ color: palette.muted }}
-          >
-            Developed by dev
-          </a>
+            {/* Brand Footer */}
+            <div className="text-center py-4">
+              <p className="text-[13px] text-[#434654]">Developed by dev</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

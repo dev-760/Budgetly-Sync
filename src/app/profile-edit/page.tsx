@@ -1,128 +1,85 @@
 "use client";
 
-import React, { useState, useRef, Suspense } from "react";
-import { useRouter } from "next/navigation";
-import { X, User, Camera } from "lucide-react";
-import { useThemeContext } from "@/lib/theme-provider";
-import { useBudget } from "@/lib/budget-store";
-import { BrandLockup, Input } from "@/components/budget-ui";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, User, Camera } from 'lucide-react';
+import { useBudget } from '@/lib/budget-store';
 
-function ProfileEditContent() {
+export default function ProfileEditPage() {
   const router = useRouter();
-  const { palette } = useThemeContext();
-  const { settings, updateProfile } = useBudget();
-  
-  const isFrench = settings.language === "fr";
+  const { settings, setDisplayName, setProfileImage, t } = useBudget();
+  const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
-  
-  const [displayName, setDisplayName] = useState(settings.displayName ?? "");
-  const [profileImageUri, setProfileImageUri] = useState(settings.profileImageUri);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const choosePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImageUri(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const [name, setName] = useState(settings.displayName || "");
+  const [imageUri, setImageUri] = useState(settings.profileImageUri || "");
 
   const save = () => {
-    updateProfile({ displayName: displayName.trim(), profileImageUri });
+    if (name.trim()) setDisplayName(name.trim());
+    if (imageUri.trim()) setProfileImage(imageUri.trim());
     router.back();
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 flex flex-col" style={{ backgroundColor: palette.background }}>
-      <div className="flex items-center justify-between mb-8 max-w-xl mx-auto w-full">
-        <button 
-          onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-xl border bg-white shadow-sm hover:opacity-80 transition-opacity"
-          style={{ borderColor: palette.border }}
-        >
-          <X size={22} color={palette.foreground} />
-        </button>
-        <BrandLockup compact />
-        <button 
-          onClick={save}
-          className="h-10 px-4 rounded-xl flex items-center justify-center transition-opacity hover:opacity-90"
-          style={{ backgroundColor: palette.primary }}
-        >
-          <span className="text-sm font-bold text-white">{label("Save", "Enregistrer")}</span>
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#f8f9ff]">
+      <div className="max-w-2xl mx-auto py-8 px-6 space-y-6">
 
-      <div className="max-w-xl mx-auto w-full">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: palette.foreground }}>
-          {label("Edit profile", "Modifier le profil")}
-        </h1>
-        <p className="text-sm mb-8" style={{ color: palette.muted, lineHeight: 1.5 }}>
-          {label("Your name and photo stay on this device. Nothing is uploaded.", "Ton nom et ta photo restent sur cet appareil. Rien n’est envoyé en ligne.")}
-        </p>
-
-        <div className="flex flex-col items-center mb-8">
-          <div 
-            className="relative w-28 h-28 rounded-full flex items-center justify-center cursor-pointer mb-3"
-            style={{ backgroundColor: palette.primary }}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {profileImageUri ? (
-              <img src={profileImageUri} alt="Profile" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <User size={48} color="#FFFFFF" />
-            )}
-            <div 
-              className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full flex items-center justify-center border-[3px] shadow-sm"
-              style={{ backgroundColor: palette.foreground, borderColor: palette.background }}
-            >
-              <Camera size={16} color={palette.background} />
-            </div>
-          </div>
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="text-sm font-bold transition-opacity hover:opacity-80"
-            style={{ color: palette.primary }}
-          >
-            {profileImageUri ? label("Change photo", "Changer la photo") : label("Add a profile photo", "Ajouter une photo")}
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
+            <ArrowLeft size={20} className="text-[#434654]" />
           </button>
-          <input 
-            type="file" 
-            accept="image/*" 
-            ref={fileInputRef}
-            className="hidden" 
-            onChange={choosePhoto}
-          />
+          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Edit Profile", "Modifier le profil")}</h1>
         </div>
 
-        <div className="p-5 rounded-2xl border bg-white dark:bg-slate-900" style={{ borderColor: palette.border }}>
-          <h4 className="text-xs font-bold tracking-wider mb-4" style={{ color: palette.primary }}>
-            {label("PERSONAL", "PERSONNEL")}
-          </h4>
-          <label className="block text-sm font-bold mb-2" style={{ color: palette.foreground }}>
-            {label("Name", "Nom")}
-          </label>
-          <Input 
-            value={displayName} 
-            onChange={setDisplayName} 
-            placeholder={label("Your name", "Ton nom")}
-            className="mb-2"
-          />
-          <p className="text-xs" style={{ color: palette.muted, lineHeight: 1.5 }}>
-            {label("This helps make your dashboard feel personal.", "Cela personnalise ton tableau de bord.")}
-          </p>
+        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] p-6 space-y-8">
+          
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-24 h-24 rounded-2xl bg-[#003fb1] flex items-center justify-center relative overflow-hidden shadow-sm">
+              {imageUri ? (
+                <img src={imageUri} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={40} className="text-white" />
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Display Name", "Nom d'affichage")}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={label("Enter your name", "Entrez votre nom")}
+                className="w-full px-4 py-3 rounded-lg border border-[#e5e7eb] bg-white text-[14px] font-medium text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1] transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Profile Image URL", "URL de l'image de profil")}</label>
+              <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-[#e5e7eb] focus-within:border-[#003fb1] focus-within:ring-1 focus-within:ring-[#003fb1] transition-all bg-white">
+                <Camera size={16} className="text-[#434654]" />
+                <input
+                  type="text"
+                  value={imageUri}
+                  onChange={(e) => setImageUri(e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 text-[14px] bg-transparent outline-none text-[#191b23]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={save}
+            className="w-full py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
+          >
+            {label("Save Changes", "Enregistrer les modifications")}
+          </button>
         </div>
       </div>
     </div>
-  );
-}
-
-export default function ProfileEditPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 dark:bg-slate-900" />}>
-      <ProfileEditContent />
-    </Suspense>
   );
 }

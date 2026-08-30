@@ -2,23 +2,22 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Wallet, CalendarMonth, Plus, ArrowUpRight, ArrowDownLeft, Receipt, PiggyBank, RepeatIcon, PieChart, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRightLeft, Landmark, ArrowUpRight, Lightbulb, Receipt, ShoppingCart, Car, Laptop } from 'lucide-react';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
-import { BrandLockup, Card, EmptyState, MoneyText, ProgressBar, RoundIcon, SectionTitle, FormattedDate } from '@/components/budget-ui';
 import { formatMoney } from '@/lib/budget-data';
 import { cn } from '@/lib/utils';
+import { FormattedDate } from '@/components/budget-ui';
 
 export default function HomePage() {
   const router = useRouter();
   const { palette } = useThemeContext();
-  const { settings, transactions, budgets, recurring, buckets, notifications, finance, t, categoryName } = useBudget();
+  const { settings, transactions, budgets, recurring, buckets, finance, t, categoryName } = useBudget();
   const language = settings.language;
   const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
   
-  const recent = transactions.slice(0, 3);
-  const upcoming = recurring.slice(0, 2);
+  const recent = transactions.slice(0, 5);
   const spendingByCategory = transactions
     .filter((item) => item.kind === "expense")
     .reduce<Record<string, number>>((result, item) => ({ 
@@ -26,256 +25,255 @@ export default function HomePage() {
       [item.categoryId]: (result[item.categoryId] ?? 0) + item.amount 
     }), {});
   
-  const foodBudget = budgets[0];
-  const foodSpend = foodBudget ? spendingByCategory[foodBudget.id] ?? 0 : 0;
-  const hasUnreadNotifications = notifications.some((item) => !item.isRead);
+  const topBudgets = budgets.slice(0, 3);
+  
+  const getCategoryIcon = (id: string) => {
+    switch (id) {
+      case 'food': return ShoppingCart;
+      case 'transport': return Car;
+      case 'housing': return Landmark;
+      case 'entertainment': return Laptop;
+      default: return Receipt;
+    }
+  };
 
   return (
-    <div className="min-h-screen pb-24 px-5 pt-4 max-w-5xl mx-auto" style={{ backgroundColor: palette.background }}>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
-        <div>
-          <BrandLockup compact />
-          <p className="text-[13px] mt-1.5" style={{ color: palette.muted }}>
-            {t("goodMorning")}
-          </p>
+    <div className="flex flex-col w-full px-10 py-8 gap-8">
+      {/* Top Actions */}
+      <div className="flex justify-between items-center bg-[#f3f3fe] rounded-xl p-4 shadow-sm border border-[#e5e7eb]">
+        <div className="flex flex-col">
+          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Dashboard", "Tableau de bord")}</h1>
+          <p className="text-[14px] leading-[20px] text-[#434654]">{label("Overview of your financial activity", "Aperçu de votre activité financière")}</p>
         </div>
-        <button
-          onClick={() => router.push('/notifications')}
-          className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-          style={{ backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border }}
-        >
-          <Bell size={23} color={palette.foreground} />
-          {hasUnreadNotifications && (
-            <div 
-              className="absolute top-2 right-2.5 w-2 h-2 rounded-full border-[1.5px]"
-              style={{ backgroundColor: palette.error, borderColor: palette.surface }}
-            />
-          )}
-        </button>
-      </div>
-
-      {/* Safe to Spend Hero */}
-      <div 
-        className="rounded-[24px] p-[22px] mb-4 overflow-hidden relative"
-        style={{ 
-          backgroundColor: palette.primary, 
-          boxShadow: `0 16px 32px -8px ${palette.primary}80` 
-        }}
-      >
-        <div className="flex justify-between items-center relative z-10">
-          <div>
-            <p className="text-[13px] font-bold text-[#DDE6FF]">{t("safeToSpend")}</p>
-            <p className="text-xs mt-1 leading-[17px] max-w-[215px] text-[#CCD9FF]">{t("spendToday")}</p>
-          </div>
-          <div className="w-11 h-11 rounded-[15px] flex items-center justify-center bg-white/20">
-            <PiggyBank size={24} color="#FFFFFF" />
-          </div>
-        </div>
-        
-        <p className="text-[42px] leading-[48px] font-extrabold tracking-[-1.5px] tabular-nums mt-6 text-white">
-          {formatMoney(finance.safeToSpend, language as any)}
-        </p>
-        
-        <div className="mt-4 inline-flex items-center gap-1.5 bg-white/20 px-2.5 py-2 rounded-xl">
-          <CalendarMonth size={15} color="#FFFFFF" />
-          <span className="text-[13px] font-bold text-white">
-            {formatMoney(finance.dailySafeToSpend, language as any)} / {isFrench ? "jour" : "day"}
-          </span>
-        </div>
-      </div>
-
-      <div className="md:flex md:gap-6 md:items-start">
-        <div className="md:flex-[7]">
-          {/* Metrics Row */}
-          <div className="flex gap-3 mt-3.5 mb-4">
-            <Card className="flex-1 p-[15px] min-h-[132px]">
-              <RoundIcon icon={Wallet} size={34} color={palette.primary} background="#EAF0FF" />
-              <p className="text-xs font-semibold mt-3 mb-1" style={{ color: palette.muted }}>{t("availableBalance")}</p>
-              <MoneyText amount={finance.availableBalance} language={language as any} className="text-lg font-bold" />
-            </Card>
-            
-            <Card className="flex-1 p-[15px] min-h-[132px]">
-              <RoundIcon icon={CalendarMonth} size={34} color="#10B981" background="#E7F7F1" />
-              <p className="text-xs font-semibold mt-3 mb-1" style={{ color: palette.muted }}>{t("thisMonth")}</p>
-              <p className="text-xs font-bold mt-2 leading-[17px]">
-                <span style={{ color: '#10B981' }}>{formatMoney(finance.income, language as any)}</span>
-                {" · "}
-                <span style={{ color: '#ef4444' }}>{formatMoney(finance.expenses, language as any)}</span>
-              </p>
-            </Card>
-          </div>
-
-          {/* Add Expense Button */}
-          <div className="w-full flex justify-center mb-4">
-            <button
-              onClick={() => router.push('/transaction?kind=expense')}
-              className="w-full md:max-w-[300px] h-[52px] rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ 
-                backgroundColor: palette.primary, 
-                boxShadow: `0 10px 25px -5px ${palette.primary}60` 
-              }}
-            >
-              <span className="text-sm font-extrabold text-white">{t("addExpense")}</span>
-            </button>
-          </div>
-
-          {/* Recent Transactions */}
-          <SectionTitle 
-            title={t("recentTransactions")} 
-            action={t("viewAll")}
-            onPress={() => router.push('/transactions')}
-          />
-          <Card className="py-1">
-            {recent.length === 0 ? (
-              <EmptyState
-                icon={Receipt}
-                title={isFrench ? "Prêt à commencer" : "Ready when you are"}
-                description={isFrench ? "Ajoute un revenu ou une dépense pour voir ton activité." : "Add income or an expense to see your activity."}
-              />
-            ) : (
-              <div className="divide-y divide-gray-100 dark:divide-slate-800 px-2">
-                {recent.map((item) => (
-                  <button 
-                    key={item.id}
-                    onClick={() => router.push(`/transaction?id=${item.id}`)}
-                    className="w-full flex items-center gap-3 py-3.5 px-2 text-left transition-opacity hover:opacity-70"
-                  >
-                    <RoundIcon 
-                      icon={item.kind === "income" ? ArrowDownLeft : ArrowUpRight} 
-                      size={38} 
-                      color={item.kind === "income" ? "#10B981" : "#ef4444"} 
-                      background={item.kind === "income" ? "#E7F7F1" : "#FDEBEC"} 
-                    />
-                    <div className="flex-1">
-                      <h3 className="text-[15px] font-bold" style={{ color: palette.foreground }}>{item.title}</h3>
-                      <p className="text-xs mt-1" style={{ color: palette.muted }}>
-                        <FormattedDate date={item.date} language={language as any} /> · {categoryName(item.categoryId)}
-                      </p>
-                    </div>
-                    <MoneyText 
-                      amount={item.amount} 
-                      language={language as any}
-                      type={item.kind}
-                      className="text-sm font-bold text-right"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Finance Board Shortcut Strip */}
-          <button
+        <div className="flex gap-4">
+          <button 
             onClick={() => router.push('/finance')}
-            className="w-full mt-4 rounded-[24px] p-[22px] text-left transition-all hover:scale-[0.98] block relative overflow-hidden"
-            style={{ 
-              backgroundColor: '#172033',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' 
-            }}
+            className="flex items-center gap-2 px-6 py-3 bg-[#ededf8] rounded-lg border border-[#e5e7eb] hover:border-[#003fb1] transition-colors text-[#191b23] text-[13px] tracking-[0.02em] font-semibold shadow-sm"
           >
-            <div className="flex justify-between items-center mb-3.5 relative z-10">
-              <div>
-                <h3 className="text-[17px] font-extrabold text-white">{isFrench ? "Vue financière" : "Finance board"}</h3>
-                <p className="text-[13px] mt-1 text-[#8B94A7]">{isFrench ? "Comptes et engagements" : "Accounts & commitments"}</p>
-              </div>
-              <div className="bg-white/10 px-3.5 py-2.5 rounded-xl text-right">
-                <p className="text-[11px] font-bold text-white uppercase tracking-wider">{isFrench ? "Valeur nette" : "Net worth"}</p>
-                <p className="text-[19px] font-extrabold text-white mt-1 tabular-nums">
-                  {formatMoney(finance.netWorth, language as any)}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3.5 mt-4">
-              {buckets.map((bucket) => (
-                <div key={bucket.id} className="flex-1 flex items-center gap-3 bg-white/5 p-3 rounded-2xl">
-                  <RoundIcon 
-                    icon={Wallet} 
-                    size={30} 
-                    color={bucket.color} 
-                    background={bucket.id === "cash" ? "rgba(22, 167, 123, 0.15)" : "rgba(26, 86, 219, 0.15)"} 
-                  />
-                  <div>
-                    <p className="text-[13px] font-bold text-[#DDE6FF]">{bucket.id === "cash" ? t("cash") : t("card")}</p>
-                    <p className="text-[15px] font-extrabold text-white mt-0.5">{formatMoney(bucket.balance, language as any)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ArrowRightLeft size={20} />
+            {label("Transfer Funds", "Transférer des fonds")}
+          </button>
+          <button 
+            onClick={() => router.push('/transaction?kind=expense')}
+            className="flex items-center gap-2 px-6 py-3 bg-[#003fb1] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#b5c4ff] hover:text-[#00174d] transition-colors shadow-md"
+          >
+            <Plus size={20} />
+            {label("Add Expense", "Ajouter une dépense")}
           </button>
         </div>
+      </div>
 
-        <div className="md:flex-[5] mt-6 md:mt-0">
-          {/* Budget Health */}
-          <SectionTitle title={t("budgetHealth")} />
-          {foodBudget ? (
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3.5">
-                <div className="flex items-center gap-2.5 flex-1">
-                  <RoundIcon icon={PieChart} size={38} color={foodBudget.color} background="#E7F7F1" />
-                  <div>
-                    <p className="text-[15px] font-extrabold" style={{ color: palette.foreground }}>{categoryName(foodBudget.id)}</p>
-                    <p className="text-xs mt-0.5" style={{ color: palette.muted }}>{formatMoney(foodSpend, language as any)} {t("spent")}</p>
-                  </div>
-                </div>
-                <p className="text-xs font-extrabold text-right max-w-[95px]" style={{ color: '#10B981' }}>
-                  {formatMoney(Math.max(foodBudget.limit - foodSpend, 0), language as any)} {t("remaining")}
-                </p>
+      {/* Main Grid */}
+      <div className="grid grid-cols-12 gap-6">
+        
+        {/* Left Column (8 cols) */}
+        <div className="col-span-12 xl:col-span-8 flex flex-col gap-8">
+          
+          {/* Weekly Spending Chart */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Weekly Spending Trend", "Tendance Hebdomadaire")}</h2>
+              <select className="bg-[#ededf8] px-4 py-2 rounded-lg text-[11px] font-bold tracking-[0.05em] text-[#434654] border-none outline-none appearance-none pr-8">
+                <option>{label("Last 7 Days", "Les 7 derniers jours")}</option>
+                <option>{label("Last 30 Days", "Les 30 derniers jours")}</option>
+                <option>{label("This Year", "Cette année")}</option>
+              </select>
+            </div>
+            
+            {/* Chart Visualization Placeholder */}
+            <div className="relative w-full h-[320px] bg-[#f3f3fe] rounded-lg p-4 flex items-end justify-between border border-[#e5e7eb] overflow-hidden group">
+              <div className="absolute inset-0 flex flex-col justify-between py-4 z-0 pointer-events-none opacity-20">
+                <div className="w-full border-t border-[#737686]"></div>
+                <div className="w-full border-t border-[#737686]"></div>
+                <div className="w-full border-t border-[#737686]"></div>
+                <div className="w-full border-t border-[#737686]"></div>
+                <div className="w-full border-t border-[#737686]"></div>
               </div>
-              <ProgressBar 
-                value={foodSpend / foodBudget.limit} 
-                color={foodSpend / foodBudget.limit > 0.85 ? '#F59E0B' : foodBudget.color} 
-              />
-            </Card>
-          ) : (
-            <button 
-              onClick={() => router.push('/budget-edit')}
-              className="w-full text-left rounded-[22px] overflow-hidden transition-opacity hover:opacity-80"
-              style={{ backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border }}
-            >
-              <EmptyState 
-                icon={PieChart} 
-                title={isFrench ? "Crée ton premier budget" : "Create your first budget"} 
-                description={isFrench ? "Ajoute une limite de catégorie pour suivre tes dépenses." : "Add a category limit to track your spending."} 
-              />
-              <div className="mx-4 mb-4 h-11 rounded-2xl flex items-center justify-center gap-2" style={{ backgroundColor: '#1A56DB' }}>
-                <span className="text-sm font-extrabold text-white">{isFrench ? "Créer le budget" : "Create budget"}</span>
-                <ArrowRight size={16} color="#FFFFFF" />
-              </div>
-            </button>
-          )}
-
-          {/* Upcoming */}
-          <SectionTitle title={t("upcoming")} />
-          <Card className="py-1">
-            {upcoming.length ? (
-              <div className="divide-y divide-gray-100 dark:divide-slate-800 px-2">
-                {upcoming.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 py-3.5 px-2">
-                    <RoundIcon icon={RepeatIcon} size={38} color="#F59E0B" background="#FFF3D8" />
-                    <div className="flex-1">
-                      <h3 className="text-[15px] font-bold" style={{ color: palette.foreground }}>{item.title}</h3>
-                      <p className="text-xs mt-1" style={{ color: palette.muted }}>
-                        <FormattedDate date={item.nextDueDate} language={language as any} />
-                      </p>
-                    </div>
-                    <MoneyText 
-                      amount={item.amount} 
-                      language={language as any}
-                      className="text-sm font-bold text-right"
-                    />
-                  </div>
+              
+              <div className="relative z-10 w-12 bg-[#003fb1]/20 rounded-t-md hover:bg-[#003fb1]/40 transition-colors cursor-pointer" style={{ height: '40%' }}></div>
+              <div className="relative z-10 w-12 bg-[#003fb1]/20 rounded-t-md hover:bg-[#003fb1]/40 transition-colors cursor-pointer" style={{ height: '65%' }}></div>
+              <div className="relative z-10 w-12 bg-[#003fb1] rounded-t-md hover:bg-[#b5c4ff] transition-colors cursor-pointer shadow-[0_0_12px_rgba(26,86,219,0.3)]" style={{ height: '85%' }}></div>
+              <div className="relative z-10 w-12 bg-[#003fb1]/20 rounded-t-md hover:bg-[#003fb1]/40 transition-colors cursor-pointer" style={{ height: '30%' }}></div>
+              <div className="relative z-10 w-12 bg-[#003fb1]/20 rounded-t-md hover:bg-[#003fb1]/40 transition-colors cursor-pointer" style={{ height: '50%' }}></div>
+              <div className="relative z-10 w-12 bg-[#006c49] rounded-t-md hover:bg-[#6ffbbe] transition-colors cursor-pointer shadow-[0_0_12px_rgba(0,113,77,0.3)]" style={{ height: '25%' }}></div>
+              <div className="relative z-10 w-12 bg-[#003fb1]/20 rounded-t-md hover:bg-[#003fb1]/40 transition-colors cursor-pointer" style={{ height: '70%' }}></div>
+              
+              <div className="absolute bottom-0 left-0 w-full flex justify-between px-6 pt-2 z-10 border-t border-[#e5e7eb] bg-[#f3f3fe]/80 backdrop-blur-sm">
+                {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
+                  <span key={day} className="text-[10px] font-medium text-[#434654]">{day}</span>
                 ))}
               </div>
-            ) : (
-              <EmptyState 
-                icon={CalendarMonth} 
-                title={isFrench ? "Aucun paiement à venir" : "No upcoming payments"} 
-                description={isFrench ? "Les dépenses récurrentes apparaîtront ici." : "Recurring expenses will appear here."} 
-              />
-            )}
-          </Card>
+            </div>
+          </div>
+
+          {/* Recent Activity Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-[#e5e7eb] flex justify-between items-center bg-[#f8f9ff]">
+              <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Recent Activity", "Activité Récente")}</h2>
+              <button 
+                onClick={() => router.push('/transactions')}
+                className="text-[11px] font-bold tracking-[0.05em] text-[#003fb1] hover:text-[#b5c4ff] uppercase transition-colors"
+              >
+                {label("View All", "Voir tout")}
+              </button>
+            </div>
+            
+            <div className="w-full overflow-x-auto">
+              {recent.length === 0 ? (
+                <div className="p-8 text-center text-[#434654]">{label("No transactions yet.", "Aucune transaction pour le moment.")}</div>
+              ) : (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#f3f3fe] border-b border-[#e5e7eb]">
+                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">{label("Date", "Date")}</th>
+                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">{label("Description", "Description")}</th>
+                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase">{label("Category", "Catégorie")}</th>
+                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase text-right">{label("Amount", "Montant")}</th>
+                      <th className="py-3 px-6 text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase text-center">{label("Status", "Statut")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-[14px] font-medium text-[#191b23]">
+                    {recent.map((item, index) => {
+                      const Icon = getCategoryIcon(item.categoryId);
+                      const isIncome = item.kind === 'income';
+                      return (
+                        <tr 
+                          key={item.id} 
+                          onClick={() => router.push(`/transaction?id=${item.id}`)}
+                          className={cn(
+                            "hover:bg-[#003fb1]/5 transition-colors group cursor-pointer h-[56px]",
+                            index !== recent.length - 1 ? "border-b border-[#e5e7eb]" : ""
+                          )}
+                        >
+                          <td className="py-3 px-6 text-[#434654] group-hover:text-[#003fb1] transition-colors whitespace-nowrap">
+                            <FormattedDate date={item.date} language={language as any} />
+                          </td>
+                          <td className="py-3 px-6 font-medium whitespace-nowrap">{item.title}</td>
+                          <td className="py-3 px-6">
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap",
+                              isIncome ? "bg-[#006c49]/10 text-[#006c49] border border-[#006c49]/20" : "bg-[#ededf8] text-[#434654]"
+                            )}>
+                              <Icon size={14} />
+                              {categoryName(item.categoryId)}
+                            </span>
+                          </td>
+                          <td className={cn(
+                            "py-3 px-6 text-right font-semibold whitespace-nowrap",
+                            isIncome ? "text-[#006c49]" : "text-[#121c2a]"
+                          )}>
+                            {isIncome ? '+' : '-'}{formatMoney(item.amount, language as any)}
+                          </td>
+                          <td className="py-3 px-6 text-center">
+                            <span className={cn(
+                              "inline-block w-2 h-2 rounded-full",
+                              isIncome ? "bg-[#006c49] shadow-[0_0_4px_#006c49]" : "bg-[#c3c5d7]"
+                            )}></span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar (4 cols) */}
+        <div className="col-span-12 xl:col-span-4 flex flex-col gap-4">
+          
+          {/* Total Balance Card */}
+          <div className="bg-[#121c2a] rounded-xl p-6 shadow-sm border border-[#e5e7eb] relative overflow-hidden flex flex-col justify-between h-[200px]">
+            <div className="absolute -right-12 -top-12 w-48 h-48 bg-[#003fb1]/20 rounded-full blur-2xl z-0 pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col gap-2">
+              <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase flex items-center gap-2">
+                <Landmark size={16} className="text-[#003fb1]" />
+                {label("Available Balance", "Solde Disponible")}
+              </p>
+              <h3 className="text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-white mt-2 tabular-nums">
+                {formatMoney(finance.netWorth, language as any)}
+              </h3>
+              <p className="text-[14px] font-medium text-[#006c49] flex items-center gap-1 mt-1">
+                <ArrowUpRight size={16} />
+                {label("+2.4% vs last month", "+2.4% ce mois-ci")}
+              </p>
+            </div>
+            <div className="relative z-10 w-full bg-[#f3f3fe] h-1.5 rounded-full overflow-hidden mt-4 border border-[#e5e7eb]">
+              <div className="bg-[#003fb1] h-full rounded-full shadow-[0_0_8px_#1a56db]" style={{ width: '65%' }}></div>
+            </div>
+          </div>
+
+          {/* Monthly Budget */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-[18px] leading-tight font-semibold text-[#191b23]">{label("Monthly Budget", "Budget Mensuel")}</h3>
+              <span className="text-[11px] font-bold tracking-[0.05em] text-[#434654] px-2 py-1 bg-[#ededf8] rounded uppercase">
+                {new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+            
+            <div className="flex items-end gap-2 mb-6">
+              <span className="text-[32px] leading-none font-semibold text-[#121c2a] tabular-nums">
+                {formatMoney(
+                  topBudgets.reduce((acc, b) => acc + (spendingByCategory[b.id] ?? 0), 0), 
+                  language as any
+                )}
+              </span>
+              <span className="text-[14px] font-medium text-[#434654] mb-1 tabular-nums">
+                / {formatMoney(topBudgets.reduce((acc, b) => acc + b.limit, 0), language as any)}
+              </span>
+            </div>
+            
+            <div className="flex flex-col gap-4">
+              {topBudgets.length === 0 ? (
+                <div className="text-center text-[#434654] text-[13px]">{label("No budgets created.", "Aucun budget créé.")}</div>
+              ) : topBudgets.map((budget, index) => {
+                const spent = spendingByCategory[budget.id] ?? 0;
+                const percentage = Math.min((spent / budget.limit) * 100, 100);
+                const isWarning = percentage > 85;
+                const color = isWarning ? '#f59e0b' : budget.color;
+                
+                return (
+                  <div key={budget.id} className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center text-[11px] font-bold tracking-[0.05em]">
+                      <span className="text-[#191b23]">{categoryName(budget.id)}</span>
+                      <span className="text-[#434654] tabular-nums">{formatMoney(spent, language as any)} / {formatMoney(budget.limit, language as any)}</span>
+                    </div>
+                    <div className="w-full bg-[#ededf8] h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all" 
+                        style={{ width: `${percentage}%`, backgroundColor: color, boxShadow: isWarning ? `0 0 6px ${color}` : 'none' }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Smart Insights */}
+          <div 
+            onClick={() => router.push('/insights')}
+            className="bg-[#f8f9ff] rounded-xl p-6 shadow-sm border border-[#e5e7eb] flex flex-col relative overflow-hidden group hover:border-[#003fb1]/30 transition-colors cursor-pointer"
+          >
+            <div className="absolute right-0 top-0 w-2 h-full bg-[#f59e0b]"></div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#f59e0b]/10 flex items-center justify-center shrink-0 border border-[#f59e0b]/20">
+                <Lightbulb className="text-[#f59e0b]" size={20} />
+              </div>
+              <div className="flex flex-col">
+                <h4 className="text-[13px] tracking-[0.02em] font-semibold text-[#191b23] mb-1">{label("Unusual Spending Alert", "Alerte de Dépense Inhabituelle")}</h4>
+                <p className="text-[13px] text-[#434654] leading-relaxed">
+                  {label(
+                    "Your spending is slightly higher than your usual monthly average. Consider reviewing recent transactions.",
+                    "Vos dépenses sont légèrement supérieures à votre moyenne. Pensez à vérifier vos transactions."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </div>
     </div>

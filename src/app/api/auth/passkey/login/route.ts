@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
       expectedChallenge: authenticationResponse.response?.userChallenge || 'default-challenge',
       expectedOrigin: ORIGIN,
       expectedRPID: RP_ID,
-      authenticator: {
-        credentialID: passkey.id,
-        credentialPublicKey: passkey.publicKey,
+      credential: {
+        id: passkey.id,
+        publicKey: passkey.publicKey,
         counter: passkey.counter,
         transports: passkey.transports,
       },

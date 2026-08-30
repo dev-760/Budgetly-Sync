@@ -62,8 +62,6 @@ export async function POST(request: NextRequest) {
       publicKey: credential.publicKey,
       counter: credential.counter,
       transports: credential.transports || [],
-      backupEligible: credential.backupEligible,
-      backupStatus: credential.backupStatus,
     };
 
     const updatedPasskeys = [...passkeys, newPasskey];

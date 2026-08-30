@@ -3,10 +3,8 @@ import { verifyJWT } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-// Maximum payload size for the sync endpoint (1MB)
 const MAX_PAYLOAD_SIZE = 1024 * 1024;
 
-// Simple Zod validation to ensure the body is roughly correct without fully parsing the complex BudgetData
 const SyncDataSchema = z.object({
   data: z.record(z.string(), z.any()),
 });
@@ -25,18 +23,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = payload.username;
+    const username = payload.username as string;
 
-    // Find the sync state
-    const syncState = await prisma.syncState.findUnique({
-      where: { userId },
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: { syncData: true }
     });
 
-    if (!syncState) {
+    if (!user || !user.syncData) {
       return NextResponse.json({ data: {} });
     }
 
-    const data = JSON.parse(syncState.state);
+    const data = JSON.parse(user.syncData);
     return NextResponse.json({ data });
   } catch (error) {
     console.error('Error fetching sync state:', error);
@@ -46,7 +44,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // 1. Authorize
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -59,9 +56,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = payload.username;
+    const username = payload.username as string;
 
-    // 2. Validate Size
     const contentLength = request.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_SIZE) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
@@ -72,7 +68,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
     }
 
-    // 3. Parse and Validate Input Shape
     let parsedBody;
     try {
       parsedBody = JSON.parse(rawText);
@@ -87,31 +82,15 @@ export async function POST(request: Request) {
 
     const { data } = validationResult.data;
 
-    // 4. Lazy user creation
-    let user = await prisma.user.findUnique({ where: { email: userId } });
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: userId,
-          passwordHash: 'placeholder', 
-        }
-      });
-    }
-
-    // 5. Secure Upsert
-    const syncState = await prisma.syncState.upsert({
-      where: { userId },
-      update: {
-        state: JSON.stringify(data),
-      },
-      create: {
-        userId,
-        state: JSON.stringify(data),
+    // Secure Upsert on the User table (assuming user exists since they have a JWT)
+    const user = await prisma.user.update({
+      where: { username },
+      data: {
+        syncData: JSON.stringify(data),
       },
     });
 
-    return NextResponse.json({ success: true, updatedAt: syncState.updatedAt });
+    return NextResponse.json({ success: true, updatedAt: user.updatedAt });
   } catch (error) {
     console.error('Error saving sync state:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

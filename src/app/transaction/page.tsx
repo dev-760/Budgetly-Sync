@@ -1,232 +1,202 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { 
-  X, Trash2, Check, Tag, Home, Car, Utensils, Smartphone, Heart, Smile, BookOpen, Gift, Map, Target, Briefcase, GraduationCap
-} from "lucide-react";
-import { useThemeContext } from "@/lib/theme-provider";
-import { useBudget } from "@/lib/budget-store";
-import { cn } from "@/lib/utils";
-import { TransactionKind, categoryIds, incomeCategoryIds } from "@/lib/budget-data";
-import { Input } from "@/components/budget-ui";
+import React, { Suspense, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { X, Trash2, ShoppingCart, Car, Home, Laptop, Heart, GraduationCap, ShoppingBag, Receipt, Briefcase, Gift, Banknote, MoreHorizontal } from 'lucide-react';
+import { useBudget } from '@/lib/budget-store';
+import { useThemeContext } from '@/lib/theme-provider';
+import { categoryIds, incomeCategoryIds, TransactionKind } from '@/lib/budget-data';
+import { cn } from '@/lib/utils';
 
-const defaultIcons: Record<string, any> = {
-  "food": Utensils,
-  "housing": Home,
-  "transportation": Car,
-  "utilities": Smartphone,
-  "health": Heart,
-  "entertainment": Smile,
-  "education": BookOpen,
-  "personal": Smile,
-  "shopping": Tag,
-  "gifts": Gift,
-  "travel": Map,
-  "other": Target,
-  "scholarship": GraduationCap,
-  "salary": Briefcase,
-  "freelance": Briefcase,
-  "allowance": Gift
+const iconMap: Record<string, any> = {
+  food: ShoppingCart, transport: Car, housing: Home, entertainment: Laptop,
+  health: Heart, education: GraduationCap, shopping: ShoppingBag, other: MoreHorizontal,
+  scholarship: GraduationCap, salary: Briefcase, freelance: Banknote, gift: Gift,
 };
 
-function TransactionForm() {
+function TransactionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
-  const kindParam = searchParams.get("kind") as TransactionKind | null;
-  
+  const idParam = searchParams.get('id');
+  const kindParam = searchParams.get('kind') as TransactionKind | null;
+
   const { palette } = useThemeContext();
-  const { settings, transactions, addTransaction, updateTransaction, deleteTransaction, t, categoryName, expenseCategories } = useBudget();
-  
-  const existing = useMemo(() => transactions.find((item) => item.id === id), [id, transactions]);
-  
-  const [kind, setKind] = useState<TransactionKind>("expense");
-  const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState("food");
-  const [date, setDate] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "transfer">("cash");
-  const [note, setNote] = useState("");
+  const { settings, transactions, addTransaction, updateTransaction, deleteTransaction, t, categoryName } = useBudget();
+  const isFrench = settings.language === 'fr';
+  const label = (en: string, fr: string) => isFrench ? fr : en;
+
+  const existing = useMemo(() => transactions.find((item) => item.id === idParam), [idParam, transactions]);
+
+  const [kind, setKind] = useState<TransactionKind>(existing?.kind ?? kindParam ?? "expense");
+  const [amount, setAmount] = useState(existing ? String(existing.amount) : "");
+  const [categoryId, setCategoryId] = useState(existing?.categoryId ?? (kind === "income" ? "scholarship" : "food"));
+  const [date, setDate] = useState(existing?.date.slice(0, 10) ?? new Date().toISOString().slice(0, 10));
+  const [paymentMethod, setPaymentMethod] = useState(existing?.paymentMethod ?? "cash");
+  const [note, setNote] = useState(existing?.note ?? "");
   const [error, setError] = useState("");
 
-  // Initialize state once after mount to avoid hydration mismatch
-  useEffect(() => {
-    setKind(existing?.kind ?? kindParam ?? "expense");
-    setAmount(existing ? String(existing.amount) : "");
-    setCategoryId(existing?.categoryId ?? (existing?.kind === "income" || kindParam === "income" ? "scholarship" : "food"));
-    setDate(existing?.date.slice(0, 10) ?? new Date().toISOString().slice(0, 10));
-    setPaymentMethod(existing?.paymentMethod ?? "cash");
-    setNote(existing?.note ?? "");
-  }, [existing, kindParam]);
+  const categories = kind === "income" ? incomeCategoryIds : categoryIds;
 
-  const categories = kind === "income" 
-    ? incomeCategoryIds 
-    : [...categoryIds, ...expenseCategories.filter((item) => !categoryIds.includes(item.id as typeof categoryIds[number])).map((item) => item.id)];
+  const toggleKind = (next: TransactionKind) => {
+    setKind(next);
+    setCategoryId(next === "income" ? "scholarship" : "food");
+  };
 
   const save = () => {
     const numericAmount = Number(amount.replace(",", "."));
-    if (!numericAmount || numericAmount <= 0) { 
-      setError(t("amount")); 
-      return; 
-    }
+    if (!numericAmount || numericAmount <= 0) { setError(label("Amount is required", "Le montant est requis")); return; }
     const title = existing?.title.trim() || categoryName(categoryId);
-    const input = { kind, amount: numericAmount, categoryId, title, date, paymentMethod, note: note.trim() || undefined, isRecurring: existing?.isRecurring };
-    
-    if (existing) updateTransaction(existing.id, input); 
+    const input = { kind, amount: numericAmount, categoryId, title, date, paymentMethod, note: note.trim() || undefined };
+    if (existing) updateTransaction(existing.id, input);
     else addTransaction(input);
-    
     router.back();
   };
 
   const remove = () => {
-    if (window.confirm("Are you sure you want to delete this transaction?")) {
-      if (existing) deleteTransaction(existing.id);
+    if (window.confirm(label("Delete this transaction?", "Supprimer cette transaction ?"))) {
+      deleteTransaction(existing!.id);
       router.back();
     }
   };
 
-  const getIcon = (catId: string) => {
-    const custom = settings.customExpenseCategories.find(c => c.id === catId);
-    if (custom) return Tag; // Fallback for custom since we don't store Lucide components
-    return defaultIcons[catId] || Tag;
-  };
-
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4" style={{ backgroundColor: palette.background }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button 
-          onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-xl border bg-white shadow-sm hover:opacity-80 transition-opacity"
-          style={{ borderColor: palette.border }}
-        >
-          <X size={22} color={palette.foreground} />
-        </button>
-        <h1 className="text-lg font-bold" style={{ color: palette.foreground }}>
-          {existing ? t("edit") : kind === "income" ? t("addIncome") : t("addExpense")}
-        </h1>
-        {existing ? (
-          <button 
-            onClick={remove}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border bg-white shadow-sm hover:opacity-80 transition-opacity"
-            style={{ borderColor: palette.border }}
-          >
-            <Trash2 size={20} color="#ef4444" />
-          </button>
-        ) : (
-          <div className="w-10 h-10" />
-        )}
-      </div>
+    <div className="min-h-screen bg-[#f8f9ff] flex items-start justify-center py-12 px-4">
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
-      <div className="space-y-6 max-w-lg mx-auto">
-        {/* Amount */}
-        <div>
-          <label className="block text-sm font-bold mb-2" style={{ color: palette.foreground }}>{t("amount")}</label>
-          <div 
-            className="h-20 rounded-2xl bg-white border-2 px-5 flex items-center justify-between shadow-sm"
-            style={{ borderColor: palette.primaryLight }}
-          >
-            <input 
-              type="number"
-              value={amount}
-              onChange={(e) => { setAmount(e.target.value); setError(""); }}
-              placeholder="0"
-              className="flex-1 text-3xl font-bold bg-transparent outline-none tabular-nums"
-              style={{ color: palette.foreground }}
-            />
-            <span className="text-lg font-bold" style={{ color: palette.primary }}>DH</span>
-          </div>
-          {error && <p className="text-red-500 text-xs font-semibold mt-2">{error} is required.</p>}
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-bold mb-2" style={{ color: palette.foreground }}>
-            {kind === "income" ? t("source") : t("category")}
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            {categories.map((item) => {
-              const Icon = getIcon(item);
-              const isActive = categoryId === item;
-              return (
-                <button
-                  key={item}
-                  onClick={() => setCategoryId(item)}
-                  className={cn(
-                    "h-20 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all",
-                    isActive ? "border-blue-600 bg-blue-50/50" : "bg-white border-gray-100 dark:bg-slate-800 dark:border-slate-700"
-                  )}
-                  style={isActive ? { borderColor: palette.primary, backgroundColor: `${palette.primary}10` } : undefined}
-                >
-                  <Icon size={20} color={isActive ? palette.primary : palette.muted} />
-                  <span 
-                    className="text-xs font-bold truncate w-full px-2"
-                    style={{ color: isActive ? palette.primary : palette.muted }}
-                  >
-                    {categoryName(item)}
-                  </span>
-                </button>
-              );
-            })}
+        {/* Header */}
+        <div className="p-6 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9ff]">
+          <h2 className="text-[22px] leading-[28px] tracking-[-0.01em] font-semibold text-[#191b23]">
+            {existing ? t("edit") : kind === "income" ? t("addIncome") : t("addExpense")}
+          </h2>
+          <div className="flex items-center gap-2">
+            {existing && (
+              <button onClick={remove} className="p-2 rounded-lg hover:bg-[#ffdad6] transition-colors">
+                <Trash2 size={20} className="text-[#ba1a1a]" />
+              </button>
+            )}
+            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
+              <X size={20} className="text-[#434654]" />
+            </button>
           </div>
         </div>
 
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-bold mb-2" style={{ color: palette.foreground }}>{t("date")}</label>
-          <input 
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full h-14 rounded-xl px-4 border outline-none font-medium transition-colors"
-            style={{ backgroundColor: palette.surface, borderColor: palette.border, color: palette.foreground }}
-          />
-        </div>
+        <div className="p-6 space-y-6">
 
-        {/* Payment Method */}
-        <div>
-          <label className="block text-sm font-bold mb-2" style={{ color: palette.foreground }}>{t("paymentMethod")}</label>
-          <div className="flex gap-2">
-            {(["cash", "card", "transfer"] as const).map(item => (
+          {/* Kind Toggle */}
+          <div className="flex gap-2 p-1 bg-[#ededf8] rounded-lg">
+            {(["expense", "income"] as TransactionKind[]).map((k) => (
               <button
-                key={item}
-                onClick={() => setPaymentMethod(item)}
-                className="flex-1 h-14 rounded-xl border font-bold text-sm transition-all"
-                style={{ 
-                  backgroundColor: paymentMethod === item ? `${palette.primary}10` : palette.surface,
-                  borderColor: paymentMethod === item ? palette.primary : palette.border,
-                  color: paymentMethod === item ? palette.primary : palette.muted
-                }}
+                key={k}
+                onClick={() => toggleKind(k)}
+                className={cn(
+                  "flex-1 py-2.5 rounded-md text-[13px] tracking-[0.02em] font-semibold transition-all",
+                  kind === k ? "bg-white text-[#191b23] shadow-sm" : "text-[#434654] hover:text-[#191b23]"
+                )}
               >
-                {t(item as any)}
+                {k === "expense" ? t("expense") : t("income")}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Note */}
-        <div>
-          <label className="block text-sm font-bold mb-2" style={{ color: palette.foreground }}>{t("optionalNote")}</label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="..."
-            className="w-full h-24 rounded-xl p-4 border outline-none font-medium transition-colors resize-none"
-            style={{ backgroundColor: palette.surface, borderColor: palette.border, color: palette.foreground }}
-          />
-        </div>
+          {/* Amount */}
+          <div>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("amount")}</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => { setAmount(e.target.value); setError(""); }}
+                placeholder="0"
+                className="flex-1 text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
+              />
+              <span className="text-[22px] font-semibold text-[#434654]">DH</span>
+            </div>
+            {error && <p className="text-[13px] text-[#ba1a1a] font-semibold mt-2">{error}</p>}
+          </div>
 
-        {/* Save */}
-        <button
-          onClick={save}
-          className="w-full h-14 rounded-full flex items-center justify-center gap-2 transition-opacity hover:opacity-90 mt-4"
-          style={{ backgroundColor: palette.primary }}
-        >
-          <span className="text-white font-bold text-base">
-            {kind === "income" ? t("saveIncome") : t("saveExpense")}
-          </span>
-          <Check size={20} color="#FFFFFF" />
-        </button>
+          {/* Category */}
+          <div>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Category", "Catégorie")}</label>
+            <div className="grid grid-cols-4 gap-2">
+              {categories.map((id) => {
+                const Icon = iconMap[id] || Receipt;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setCategoryId(id)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-3 rounded-lg border transition-all text-center",
+                      categoryId === id
+                        ? "bg-[#003fb1]/5 border-[#003fb1] ring-1 ring-[#003fb1]"
+                        : "bg-white border-[#e5e7eb] hover:border-[#003fb1]/30"
+                    )}
+                  >
+                    <Icon size={20} className={categoryId === id ? "text-[#003fb1]" : "text-[#434654]"} />
+                    <span className={cn(
+                      "text-[11px] font-semibold",
+                      categoryId === id ? "text-[#003fb1]" : "text-[#434654]"
+                    )}>
+                      {categoryName(id)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-3">{label("Payment Method", "Méthode de paiement")}</label>
+            <div className="flex gap-2">
+              {["cash", "card"].map((method) => (
+                <button
+                  key={method}
+                  onClick={() => setPaymentMethod(method)}
+                  className={cn(
+                    "flex-1 py-3 rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors border",
+                    paymentMethod === method
+                      ? "bg-[#003fb1] text-white border-[#003fb1]"
+                      : "bg-[#ededf8] text-[#434654] border-[#e5e7eb] hover:bg-[#e2e1ed]"
+                  )}
+                >
+                  {method === "cash" ? t("cash") : t("card")}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Date", "Date")}</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-[#e5e7eb] bg-white text-[14px] text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1] transition-all"
+            />
+          </div>
+
+          {/* Note */}
+          <div>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{label("Note (optional)", "Note (facultatif)")}</label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={label("Add a note...", "Ajouter une note...")}
+              rows={3}
+              className="w-full px-4 py-3 rounded-lg border border-[#e5e7eb] bg-white text-[14px] text-[#191b23] outline-none focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1] transition-all resize-none placeholder:text-[#c3c5d7]"
+            />
+          </div>
+
+          {/* Save Button */}
+          <button
+            onClick={save}
+            className="w-full py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
+          >
+            {existing ? label("Update Transaction", "Mettre à jour") : label("Save Transaction", "Enregistrer")}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -234,8 +204,8 @@ function TransactionForm() {
 
 export default function TransactionPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 dark:bg-slate-900" />}>
-      <TransactionForm />
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9ff]" />}>
+      <TransactionContent />
     </Suspense>
   );
 }

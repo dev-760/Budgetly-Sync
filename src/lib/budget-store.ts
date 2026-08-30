@@ -366,7 +366,7 @@ export const useBudgetStore = create<BudgetStore>()(
         const transfer = { 
           ...input, 
           id: input.id || `transfer-${Date.now()}`, 
-          createdAt: input.createdAt || new Date().toISOString() 
+          createdAt: new Date().toISOString() 
         };
         set((state) => ({ 
           transfers: input.id 

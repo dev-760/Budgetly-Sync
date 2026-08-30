@@ -1,297 +1,170 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  X, Tag, ShoppingCart, Dog, Dumbbell, Gamepad2, Sparkles, 
-  Flag, Calendar, CreditCard, Landmark, Edit2, Trash2, Bell
-} from "lucide-react";
-import { Card, SectionTitle, RoundIcon, Button, Input } from "@/components/budget-ui";
-import { useBudget } from "@/lib/budget-store";
-import { useThemeContext, visualThemes } from "@/lib/theme-provider";
-import { cn } from "@/lib/utils";
-import type { VisualThemeId } from "@/lib/budget-data";
-
-const colors = ["#1A56DB", "#16A77B", "#D67A1F", "#7A63D2", "#D55A9B", "#1F9BB0"];
-const iconMapping = {
-  "category": Tag,
-  "local-grocery-store": ShoppingCart,
-  "pets": Dog,
-  "fitness-center": Dumbbell,
-  "sports-esports": Gamepad2,
-  "spa": Sparkles
-};
-const icons = Object.keys(iconMapping) as (keyof typeof iconMapping)[];
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Palette, Globe, Bell, Download, Trash2, Shield } from 'lucide-react';
+import { useBudget } from '@/lib/budget-store';
+import { useThemeContext, visualThemes } from '@/lib/theme-provider';
+import { Language } from '@/lib/budget-data';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { settings, addCustomExpenseCategory, updateCustomExpenseCategory, removeCustomExpenseCategory, setAppearancePreferences, setNotificationPreferences, toggleNotifications } = useBudget();
   const { palette } = useThemeContext();
-  
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [color, setColor] = useState(colors[0]);
-  const [icon, setIcon] = useState(icons[0]);
-  
-  const isFrench = settings.language === "fr";
+  const { settings, setLanguage, setVisualTheme, toggleNotifications, clearLocalData, t } = useBudget();
+  const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
-  
-  const resetForm = () => { setEditingId(null); setName(""); setColor(colors[0]); setIcon(icons[0]); };
-  
-  const saveCategory = () => {
-    const input = { name, color, icon };
-    const saved = editingId ? updateCustomExpenseCategory(editingId, input) : addCustomExpenseCategory(input);
-    if (!saved) {
-      alert("Invalid category data.");
-      return;
-    }
-    resetForm();
-  };
-  
-  const beginEdit = (id: string) => {
-    const current = settings.customExpenseCategories.find((item) => item.id === id);
-    if (!current) return;
-    setEditingId(id); setName(current.name); setColor(current.color); setIcon(current.icon as keyof typeof iconMapping);
-  };
-  
-  const remove = (id: string, title: string) => {
-    if (window.confirm(label(`Remove category ${title}?`, `Supprimer la catégorie ${title}?`))) {
-      if (!removeCustomExpenseCategory(id)) {
-        alert(label("Category in use. Move or delete its transactions and budget before removing it.", "Catégorie utilisée. Déplace ou supprime ses transactions et son budget avant de la retirer."));
-      }
+
+  const confirmReset = () => {
+    if (window.confirm(label(
+      "This will erase all your local data. This cannot be undone. Continue?",
+      "Cela effacera toutes vos données locales. Cette action est irréversible. Continuer ?"
+    ))) {
+      clearLocalData();
     }
   };
-  
-  const preferenceRows = [
-    { key: "goalDeadlines" as const, icon: Flag, en: "Goal deadlines", fr: "Échéances d’objectifs", descriptionEn: "Target-date reminders", descriptionFr: "Rappels de dates cibles" },
-    { key: "scheduledIncome" as const, icon: Calendar, en: "Scheduled income", fr: "Revenus programmés", descriptionEn: "Payday reminders", descriptionFr: "Rappels de versements" },
-    { key: "subscriptionDue" as const, icon: CreditCard, en: "Subscriptions", fr: "Abonnements", descriptionEn: "Upcoming subscription dates", descriptionFr: "Prochaines échéances" },
-    { key: "loanDue" as const, icon: Landmark, en: "Loans", fr: "Prêts", descriptionEn: "Loan-payment dates", descriptionFr: "Dates de remboursement" },
-  ];
-  
-  const themeOptions = Object.entries(visualThemes) as [VisualThemeId, (typeof visualThemes)[VisualThemeId]][];
+
+  const exportData = (format: 'json' | 'csv') => {
+    // Simple export placeholder
+    const data = JSON.stringify({ settings, exportedAt: new Date().toISOString() }, null, 2);
+    const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `budgetly-export.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4" style={{ backgroundColor: palette.background }}>
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button 
-          onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-xl border bg-white shadow-sm hover:opacity-80 transition-opacity"
-          style={{ borderColor: palette.border }}
-        >
-          <X size={22} color={palette.foreground} />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: palette.foreground }}>
-            {label("Settings", "Réglages")}
-          </h1>
-          <p className="text-xs" style={{ color: palette.muted }}>
-            {label("Local controls for your spending plan", "Contrôles locaux de ton budget")}
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#f8f9ff]">
+      <div className="max-w-3xl mx-auto py-8 px-6 space-y-6">
 
-      <div className="space-y-6 max-w-2xl mx-auto">
-        {/* Cloud Sync */}
-        <section>
-          <SectionTitle title={label("Cloud Sync", "Synchronisation Cloud")} />
-          <Card className="flex items-center gap-3 mb-4 bg-blue-50/50">
-            <RoundIcon icon={Sparkles} size={36} color={palette.primary} background={`${palette.primary}20`} />
-            <div className="flex-1">
-              <h4 className="text-sm font-bold" style={{ color: palette.foreground }}>{label("Backup and Sync Devices", "Sauvegarder et Synchroniser")}</h4>
-              <p className="text-xs mt-1" style={{ color: palette.muted }}>{label("Budgetly is local-first. You can optionally securely back up your data to the cloud.", "Budgetly est local en priorité. Vous pouvez optionnellement sauvegarder vos données dans le cloud.")}</p>
-            </div>
-            <Button size="small" onPress={() => router.push('/auth')}>
-              {label("Set up Sync", "Configurer la synchronisation")}
-            </Button>
-          </Card>
-        </section>
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
+            <ArrowLeft size={20} className="text-[#434654]" />
+          </button>
+          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Settings", "Réglages")}</h1>
+        </div>
 
         {/* Appearance */}
-        <section>
-          <SectionTitle title={label("Appearance", "Apparence")} />
-          <Card>
-            <div className="flex items-center justify-between pb-4 border-b mb-4" style={{ borderColor: palette.border }}>
-              <div>
-                <h4 className="font-semibold" style={{ color: palette.foreground }}>{label("Dark mode", "Mode sombre")}</h4>
-                <p className="text-xs mt-1" style={{ color: palette.muted }}>
-                  {label("A calmer interface for low-light study sessions.", "Une interface plus douce pour les sessions d’étude en faible lumière.")}
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
-                  checked={settings.appearance.colorScheme === "dark"}
-                  onChange={(e) => setAppearancePreferences({ colorScheme: e.target.checked ? "dark" : "light" })}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ backgroundColor: settings.appearance.colorScheme === "dark" ? palette.primary : undefined }}></div>
-              </label>
-            </div>
-            
-            <h4 className="text-xs font-bold mb-3" style={{ color: palette.muted }}>{label("Accent theme", "Thème d’accentuation")}</h4>
-            <div className="flex flex-wrap gap-2">
-              {themeOptions.map(([theme, details]) => (
+        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+          <div className="p-6 border-b border-[#e5e7eb] flex items-center gap-3">
+            <Palette size={20} className="text-[#003fb1]" />
+            <h2 className="text-[18px] font-semibold text-[#191b23]">{label("Appearance", "Apparence")}</h2>
+          </div>
+          <div className="p-6">
+            <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-4">{label("Theme", "Thème")}</p>
+            <div className="grid grid-cols-3 gap-3">
+              {(Object.entries(visualThemes) as [string, typeof visualThemes[keyof typeof visualThemes]][]).map(([id, theme]) => (
                 <button
-                  key={theme}
-                  onClick={() => setAppearancePreferences({ visualTheme: theme })}
-                  className="flex-1 min-w-[100px] min-h-[76px] rounded-xl border-2 p-2 flex flex-col justify-between transition-colors"
-                  style={{ 
-                    borderColor: settings.appearance.visualTheme === theme ? details.primary : palette.border,
-                    backgroundColor: settings.appearance.visualTheme === theme ? details.soft : palette.background
-                  }}
+                  key={id}
+                  onClick={() => setVisualTheme(id as any)}
+                  className={cn(
+                    "p-4 rounded-xl border-2 transition-all text-center",
+                    settings.visualTheme === id
+                      ? "border-[#003fb1] bg-[#003fb1]/5 shadow-sm"
+                      : "border-[#e5e7eb] hover:border-[#003fb1]/30"
+                  )}
                 >
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: details.primary }} />
-                  <span className="text-xs font-bold text-left" style={{ color: settings.appearance.visualTheme === theme ? details.primary : palette.foreground }}>
-                    {details.name}
-                  </span>
+                  <div className="w-10 h-10 rounded-full mx-auto mb-3" style={{ backgroundColor: theme.primary }}></div>
+                  <p className="text-[13px] font-semibold text-[#191b23]">{theme.name}</p>
                 </button>
               ))}
             </div>
-          </Card>
-        </section>
+          </div>
+        </div>
 
-        {/* Expense Categories */}
-        <section>
-          <SectionTitle title={label("Expense categories", "Catégories de dépenses")} />
-          <Card className="flex items-center gap-3 mb-4 bg-blue-50/50">
-            <RoundIcon icon={Tag} size={36} color={palette.primary} background={`${palette.primary}20`} />
-            <div>
-              <h4 className="text-sm font-bold" style={{ color: palette.foreground }}>{label("Your categories, on this device", "Tes catégories, sur cet appareil")}</h4>
-              <p className="text-xs mt-1" style={{ color: palette.muted }}>{label("Create a category for expense entry. Built-in categories stay available.", "Crée une catégorie pour tes dépenses. Les catégories intégrées restent disponibles.")}</p>
-            </div>
-          </Card>
-
-          <Card>
-            <h4 className="font-bold mb-3" style={{ color: palette.foreground }}>
-              {editingId ? label("Edit category", "Modifier la catégorie") : label("New category", "Nouvelle catégorie")}
-            </h4>
-            <Input 
-              value={name} 
-              onChange={setName} 
-              placeholder={label("e.g. Sports", "ex. Sport")}
-              className="mb-4"
-            />
-            
-            <h5 className="text-xs font-bold mb-2" style={{ color: palette.muted }}>{label("Color", "Couleur")}</h5>
-            <div className="flex gap-2 mb-4">
-              {colors.map(c => (
-                <button 
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className={cn("w-7 h-7 rounded-full border-2 transition-all", color === c ? "border-black dark:border-white" : "border-transparent")}
-                  style={{ backgroundColor: c }}
-                />
+        {/* Language */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+          <div className="p-6 border-b border-[#e5e7eb] flex items-center gap-3">
+            <Globe size={20} className="text-[#003fb1]" />
+            <h2 className="text-[18px] font-semibold text-[#191b23]">{t("language")}</h2>
+          </div>
+          <div className="p-6">
+            <div className="flex gap-3">
+              {(["en", "fr"] as Language[]).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={cn(
+                    "flex-1 py-3 rounded-lg text-[14px] font-semibold transition-colors border",
+                    settings.language === lang
+                      ? "bg-[#003fb1] text-white border-[#003fb1]"
+                      : "bg-[#ededf8] text-[#434654] border-[#e5e7eb] hover:bg-[#e2e1ed]"
+                  )}
+                >
+                  {lang === "en" ? "English" : "Français"}
+                </button>
               ))}
             </div>
-
-            <h5 className="text-xs font-bold mb-2" style={{ color: palette.muted }}>{label("Icon", "Icône")}</h5>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {icons.map(ic => {
-                const Icon = iconMapping[ic];
-                return (
-                  <button 
-                    key={ic}
-                    onClick={() => setIcon(ic)}
-                    className={cn(
-                      "w-10 h-10 rounded-xl border flex items-center justify-center transition-colors",
-                      icon === ic ? "bg-gray-100" : "bg-white"
-                    )}
-                    style={{ borderColor: palette.border }}
-                  >
-                    <Icon size={20} color={icon === ic ? palette.primary : palette.muted} />
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="flex gap-2">
-              <Button onPress={saveCategory} className="flex-1">
-                {editingId ? label("Save changes", "Enregistrer") : label("Add category", "Ajouter")}
-              </Button>
-              {editingId && (
-                <Button variant="secondary" onPress={resetForm}>
-                  {label("Cancel", "Annuler")}
-                </Button>
-              )}
-            </div>
-          </Card>
-
-          {settings.customExpenseCategories.length > 0 && (
-            <Card className="mt-4">
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {settings.customExpenseCategories.map(item => {
-                  const Icon = iconMapping[item.icon as keyof typeof iconMapping] || Tag;
-                  return (
-                    <div key={item.id} className="flex items-center gap-3 py-3">
-                      <RoundIcon icon={Icon} size={38} color={item.color} background={`${item.color}20`} />
-                      <span className="flex-1 font-bold text-sm" style={{ color: palette.foreground }}>{item.name}</span>
-                      <button onClick={() => beginEdit(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-slate-800">
-                        <Edit2 size={16} color={palette.primary} />
-                      </button>
-                      <button onClick={() => remove(item.id, item.name)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30">
-                        <Trash2 size={16} color="#ef4444" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          )}
-        </section>
+          </div>
+        </div>
 
         {/* Notifications */}
-        <section>
-          <SectionTitle title={label("Notifications", "Notifications")} />
-          <Card>
-            <div className="flex items-center justify-between pb-4 border-b mb-2" style={{ borderColor: palette.border }}>
-              <div>
-                <h4 className="font-semibold" style={{ color: palette.foreground }}>{label("Device reminders", "Rappels de l’appareil")}</h4>
-                <p className="text-xs mt-1" style={{ color: palette.muted }}>{label("Only local notifications.", "Notifications uniquement locales.")}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
-                  checked={settings.notificationsEnabled}
-                  onChange={() => toggleNotifications()}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ backgroundColor: settings.notificationsEnabled ? palette.primary : undefined }}></div>
-              </label>
+        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+          <div className="p-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bell size={20} className="text-[#003fb1]" />
+              <h2 className="text-[18px] font-semibold text-[#191b23]">{t("notificationsEnabled")}</h2>
             </div>
-
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {preferenceRows.map(row => (
-                <div key={row.key} className="flex items-center justify-between py-3">
-                  <div>
-                    <h5 className="font-bold text-sm" style={{ color: palette.foreground }}>{label(row.en, row.fr)}</h5>
-                    <p className="text-[10px] mt-1" style={{ color: palette.muted }}>{label(row.descriptionEn, row.descriptionFr)}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer" 
-                      disabled={!settings.notificationsEnabled}
-                      checked={settings.notificationPreferences[row.key]}
-                      onChange={(e) => setNotificationPreferences({ [row.key]: e.target.checked })}
-                    />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-disabled:opacity-50" style={{ backgroundColor: settings.notificationPreferences[row.key] && settings.notificationsEnabled ? palette.primary : undefined }}></div>
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            <Button 
-              className="w-full mt-4" 
-              disabled={!settings.notificationsEnabled}
-              onPress={() => alert("Notification settings saved.")}
+            <button
+              onClick={toggleNotifications}
+              className={cn(
+                "w-12 h-7 rounded-full transition-colors relative",
+                settings.notificationsEnabled ? "bg-[#003fb1]" : "bg-[#c3c5d7]"
+              )}
             >
-              <Bell size={18} className="mr-2" />
-              {label("Apply reminder preferences", "Appliquer les préférences")}
-            </Button>
-          </Card>
-        </section>
+              <div className={cn(
+                "w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm",
+                settings.notificationsEnabled ? "left-6" : "left-1"
+              )} />
+            </button>
+          </div>
+        </div>
+
+        {/* Data Export */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] overflow-hidden">
+          <div className="p-6 border-b border-[#e5e7eb] flex items-center gap-3">
+            <Download size={20} className="text-[#003fb1]" />
+            <h2 className="text-[18px] font-semibold text-[#191b23]">{label("Data Export", "Export des données")}</h2>
+          </div>
+          <div className="p-6 flex gap-3">
+            <button
+              onClick={() => exportData('json')}
+              className="flex-1 py-3 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#191b23] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors"
+            >
+              {label("Export JSON", "Exporter JSON")}
+            </button>
+            <button
+              onClick={() => exportData('csv')}
+              className="flex-1 py-3 bg-[#ededf8] hover:bg-[#e2e1ed] text-[#191b23] rounded-lg text-[13px] tracking-[0.02em] font-semibold transition-colors"
+            >
+              {label("Export CSV", "Exporter CSV")}
+            </button>
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#ffdad6] overflow-hidden">
+          <div className="p-6 border-b border-[#ffdad6] flex items-center gap-3">
+            <Shield size={20} className="text-[#ba1a1a]" />
+            <h2 className="text-[18px] font-semibold text-[#ba1a1a]">{label("Danger Zone", "Zone de danger")}</h2>
+          </div>
+          <div className="p-6">
+            <p className="text-[14px] text-[#434654] mb-4">
+              {label("This action will permanently erase all your local financial data.", "Cette action effacera définitivement toutes vos données financières locales.")}
+            </p>
+            <button
+              onClick={confirmReset}
+              className="flex items-center gap-2 px-5 py-3 bg-[#ba1a1a] text-white rounded-lg text-[13px] tracking-[0.02em] font-semibold hover:bg-[#93000a] transition-colors"
+            >
+              <Trash2 size={16} />
+              {t("clearLocalData")}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

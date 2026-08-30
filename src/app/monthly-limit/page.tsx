@@ -1,110 +1,129 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { X, Info } from "lucide-react";
-import { useThemeContext } from "@/lib/theme-provider";
-import { useBudget } from "@/lib/budget-store";
-import { formatMoney } from "@/lib/budget-data";
-import { Card, Button } from "@/components/budget-ui";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Target } from 'lucide-react';
+import { useBudget } from '@/lib/budget-store';
+import { formatMoney } from '@/lib/budget-data';
+import { cn } from '@/lib/utils';
 
 export default function MonthlyLimitPage() {
   const router = useRouter();
-  const { palette } = useThemeContext();
-  const { settings, finance, setMonthlySpendingLimit } = useBudget();
-  
-  const isFrench = settings.language === "fr";
+  const { settings, finance, setMonthlyLimit, t } = useBudget();
+  const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
-  
-  const [value, setValue] = useState(settings.monthlySpendingLimit ? String(settings.monthlySpendingLimit) : "");
+
+  const currentLimit = finance.monthlyLimit || 0;
+  const [limit, setLimitAmount] = useState(currentLimit ? String(currentLimit) : "");
+  const [error, setError] = useState("");
 
   const save = () => {
-    const amount = Number(value.replace(",", "."));
-    if (!setMonthlySpendingLimit(amount)) {
-      alert(label("Enter a valid monthly limit.", "Saisis une limite mensuelle valide.")); 
-      return;
-    }
+    const numLimit = Number(limit.replace(",", "."));
+    if (!numLimit || numLimit <= 0) { setError(label("Amount is required", "Le montant est requis")); return; }
+    
+    setMonthlyLimit(numLimit);
     router.back();
   };
 
-  const clear = () => { 
-    setMonthlySpendingLimit(undefined); 
-    router.back(); 
+  const clear = () => {
+    setMonthlyLimit(0);
+    router.back();
   };
 
+  const spent = finance.expenses;
+  const ratio = currentLimit > 0 ? spent / currentLimit : 0;
+  const percentage = Math.min(ratio * 100, 100);
+  const over = spent > currentLimit;
+
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 flex flex-col items-center" style={{ backgroundColor: palette.background }}>
-      <div className="w-full max-w-lg flex items-center justify-between mb-8">
-        <button 
-          onClick={() => router.back()}
-          className="w-10 h-10 flex items-center justify-center rounded-xl border bg-white shadow-sm hover:opacity-80 transition-opacity"
-          style={{ borderColor: palette.border }}
-        >
-          <X size={22} color={palette.foreground} />
-        </button>
-        <h1 className="text-lg font-bold" style={{ color: palette.foreground }}>
-          {label("Spending limit", "Limite de dépenses")}
-        </h1>
-        <button 
-          onClick={save}
-          className="h-10 px-4 rounded-xl flex items-center justify-center transition-opacity hover:opacity-90"
-          style={{ backgroundColor: palette.primary }}
-        >
-          <span className="text-sm font-bold text-white">{label("Save", "Enregistrer")}</span>
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#f8f9ff]">
+      <div className="max-w-2xl mx-auto py-8 px-6 space-y-6">
 
-      <div className="w-full max-w-lg">
-        <h2 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: palette.foreground }}>
-          {label("Monthly spending limit", "Limite mensuelle")}
-        </h2>
-        <p className="text-sm mb-8" style={{ color: palette.muted, lineHeight: 1.5 }}>
-          {label("Set one total limit to compare against your monthly expenses.", "Définis une limite totale à comparer à tes dépenses mensuelles.")}
-        </p>
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-[#ededf8] transition-colors">
+            <ArrowLeft size={20} className="text-[#434654]" />
+          </button>
+          <h1 className="text-[28px] leading-[36px] tracking-[-0.01em] font-semibold text-[#191b23]">{label("Global Spending Limit", "Limite de dépense globale")}</h1>
+        </div>
 
-        <Card className="p-5">
-          <label className="block text-sm font-bold mb-3" style={{ color: palette.foreground }}>
-            {label("Your limit", "Ta limite")}
-          </label>
-          <div 
-            className="h-20 rounded-2xl bg-white border-2 px-5 flex items-center shadow-sm transition-colors mb-4"
-            style={{ borderColor: palette.border }}
-          >
-            <input 
-              type="number"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder="0"
-              autoFocus
-              className="flex-1 h-full text-4xl font-bold bg-transparent outline-none tabular-nums"
-              style={{ color: palette.foreground }}
-            />
-            <span className="text-xl font-bold ml-2" style={{ color: palette.primary }}>DH</span>
+        {/* Current Progress (if limit exists) */}
+        {currentLimit > 0 && (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-[#e5e7eb]">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-[14px] font-semibold text-[#191b23]">{label("Current Progress", "Progression actuelle")}</p>
+                <p className="text-[11px] font-bold tracking-[0.05em] text-[#434654] mt-1 tabular-nums uppercase">
+                  {formatMoney(spent, settings.language as any)} {t("spent")}
+                </p>
+              </div>
+              <p className={cn(
+                "text-[13px] tracking-[0.02em] font-semibold tabular-nums",
+                over ? "text-[#ba1a1a]" : "text-[#006c49]"
+              )}>
+                {over
+                  ? `${formatMoney(spent - currentLimit, settings.language as any)} ${t("overBudget")}`
+                  : `${formatMoney(currentLimit - spent, settings.language as any)} ${t("remaining")}`
+                }
+              </p>
+            </div>
+            <div className="w-full bg-[#ededf8] h-3 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: over ? '#ba1a1a' : ratio > 0.82 ? '#f59e0b' : '#003fb1'
+                }}
+              ></div>
+            </div>
           </div>
+        )}
 
-          <div 
-            className="flex gap-3 p-4 rounded-2xl mb-2"
-            style={{ backgroundColor: `${palette.primary}10` }}
-          >
-            <Info size={20} color={palette.primary} className="shrink-0" />
-            <p className="text-xs" style={{ color: palette.muted, lineHeight: 1.5 }}>
-              {label(
-                `This month’s recorded spending is ${formatMoney(finance.expenses, settings.language as any)}.`, 
-                `Les dépenses enregistrées ce mois-ci sont de ${formatMoney(finance.expenses, settings.language as any)}.`
-              )}
+        {/* Form Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] p-6 space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-[#003fb1]/10 rounded-full flex items-center justify-center">
+              <Target size={20} className="text-[#003fb1]" />
+            </div>
+            <p className="text-[14px] text-[#434654] flex-1">
+              {label("Set a single monthly target for all your expenses.", "Définissez un objectif mensuel unique pour toutes vos dépenses.")}
             </p>
           </div>
 
-          {settings.monthlySpendingLimit && (
-            <button 
-              onClick={clear}
-              className="w-full py-4 mt-2 text-sm font-bold transition-opacity hover:opacity-80"
-              style={{ color: "#ef4444" }}
+          <div>
+            <label className="block text-[11px] font-bold tracking-[0.05em] text-[#434654] uppercase mb-2">{t("monthlyLimit")}</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={limit}
+                onChange={(e) => { setLimitAmount(e.target.value); setError(""); }}
+                placeholder="0"
+                className="flex-1 text-[36px] leading-[44px] tracking-[-0.02em] font-bold text-[#191b23] bg-transparent outline-none tabular-nums placeholder:text-[#c3c5d7]"
+                autoFocus
+              />
+              <span className="text-[22px] font-semibold text-[#434654]">DH</span>
+            </div>
+            {error && <p className="text-[13px] text-[#ba1a1a] font-semibold mt-2">{error}</p>}
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <button
+              onClick={save}
+              className="flex-1 py-3.5 bg-[#003fb1] text-white rounded-lg text-[14px] font-semibold hover:bg-[#1a56db] transition-colors shadow-md"
             >
-              {label("Remove limit", "Supprimer la limite")}
+              {label("Save Limit", "Enregistrer la limite")}
             </button>
-          )}
-        </Card>
+            {currentLimit > 0 && (
+              <button
+                onClick={clear}
+                className="px-6 py-3.5 bg-[#ffdad6] text-[#93000a] rounded-lg text-[14px] font-semibold hover:bg-[#ffb4ab] transition-colors"
+              >
+                {label("Remove", "Supprimer")}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -45,11 +45,11 @@ export function Card({ children, className, style }: { children: React.ReactNode
   const { palette } = useThemeContext();
   return (
     <div 
-      className={cn("rounded-[22px] p-4 transition-all duration-300", className)}
+      className={cn("rounded-xl p-4 transition-all duration-300", className)}
       style={{ 
         backgroundColor: palette.surface, 
         border: `1px solid ${palette.border}`,
-        boxShadow: `0 8px 24px -12px ${palette.foreground}15`,
+        boxShadow: `0px 1px 2px rgba(0, 0, 0, 0.05), 0px 4px 6px -1px rgba(0, 0, 0, 0.02)`,
         ...style 
       }}
     >
@@ -86,19 +86,19 @@ export function SectionTitle({ title, action, onPress }: { title: string; action
 export function ProgressBar({ value, color, trackColor }: { value: number; color?: string; trackColor?: string }) {
   const { palette } = useThemeContext();
   const activeColor = color || palette.primary;
-  const activeTrack = trackColor || palette.border;
+  const activeTrack = trackColor || '#F3F4F6';
   const percentage = Math.min(Math.max(value, 0), 1) * 100;
 
   return (
     <div 
-      className="h-2 rounded-full overflow-hidden"
+      className="h-1.5 rounded-full overflow-hidden"
       style={{ backgroundColor: activeTrack }}
     >
       <div 
         className="h-full rounded-full transition-all duration-300 ease-out"
         style={{ 
           width: `${percentage}%`,
-          backgroundColor: activeColor 
+          backgroundImage: `linear-gradient(90deg, ${activeColor}, ${activeColor}dd)` 
         }}
       />
     </div>
@@ -122,19 +122,42 @@ export function RoundIcon({ icon: Icon, size = 34, color, background }: { icon: 
 }
 
 // Money text component
-export function MoneyText({ amount, language, className, style }: { amount: number; language: "en" | "fr"; className?: string; style?: React.CSSProperties }) {
+export function MoneyText({ 
+  amount, 
+  language, 
+  type,
+  className, 
+  style 
+}: { 
+  amount: number; 
+  language: "en" | "fr"; 
+  type?: "income" | "expense";
+  className?: string; 
+  style?: React.CSSProperties;
+}) {
   const { palette } = useThemeContext();
   const formatted = formatMoney(amount, language);
   
+  let color = palette.foreground;
+  let prefix = "";
+  
+  if (type === "income") {
+    color = palette.success;
+    prefix = "+";
+  } else if (type === "expense") {
+    color = palette.error;
+    prefix = "-";
+  }
+  
   return (
     <span 
-      className={cn("font-semibold tabular-nums", className)}
+      className={cn("font-semibold tabular-nums tracking-[-0.02em]", className)}
       style={{ 
-        color: palette.foreground,
+        color,
         ...style 
       }}
     >
-      {formatted}
+      {prefix}{formatted}
     </span>
   );
 }
@@ -183,28 +206,30 @@ export function Button({
 }) {
   const { palette } = useThemeContext();
   
-  const baseStyles = "rounded-lg font-medium transition-all duration-200 flex items-center justify-center";
+  const baseStyles = "rounded font-medium transition-all duration-200 flex items-center justify-center";
   const sizeStyles = {
     small: "px-3 py-1.5 text-sm",
     medium: "px-4 py-2 text-base",
     large: "px-6 py-3 text-lg"
   };
   
-  const variantStyles: Record<string, { backgroundColor: string; color: string; hover: string; border?: string }> = {
+  const variantStyles: Record<string, { backgroundColor: string; color: string; hover: string; border?: string; boxShadow?: string }> = {
     primary: {
       backgroundColor: palette.primary,
       color: "#FFFFFF",
-      hover: "opacity-90"
+      hover: "opacity-90",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)"
     },
     secondary: {
-      backgroundColor: palette.primaryLight,
+      backgroundColor: palette.surface,
       color: palette.primary,
-      hover: "opacity-80"
+      hover: "bg-gray-50",
+      border: `1px solid #E5E7EB`
     },
     outline: {
       backgroundColor: "transparent",
-      color: palette.foreground,
-      border: `1px solid ${palette.border}`,
+      color: palette.muted,
+      border: `none`,
       hover: "opacity-80"
     }
   };
@@ -221,7 +246,8 @@ export function Button({
       style={{ 
         backgroundColor: styles.backgroundColor,
         color: styles.color,
-        border: styles.border
+        border: styles.border,
+        boxShadow: styles.boxShadow
       }}
     >
       {children}
@@ -235,37 +261,44 @@ export function Input({
   placeholder, 
   value, 
   onChange, 
-  type = "text",
-  className 
+  type = "text", 
+  className,
+  error
 }: { 
   label?: string; 
   placeholder?: string; 
   value: string; 
-  onChange: (value: string) => void; 
+  onChange: (val: string) => void; 
   type?: string;
   className?: string;
+  error?: string;
 }) {
   const { palette } = useThemeContext();
-  
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      {label && (
-        <label className="text-sm font-medium" style={{ color: palette.foreground }}>
-          {label}
-        </label>
-      )}
+    <div className={cn("w-full", className)}>
+      {label && <label className="block text-xs font-semibold mb-1.5" style={{ color: palette.muted }}>{label}</label>}
       <input
         type={type}
-        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-2 rounded-lg border outline-none focus:ring-2 transition-all"
+        placeholder={placeholder}
+        className="w-full rounded bg-white transition-all duration-200 outline-none placeholder:text-gray-400"
         style={{ 
-          backgroundColor: palette.surface,
-          borderColor: palette.border,
-          color: palette.foreground
+          color: palette.foreground,
+          padding: '12px 16px',
+          border: `1px solid ${error ? palette.error : '#D1D5DB'}`,
+          boxShadow: `0 1px 2px rgba(0,0,0,0.05)`
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.border = `1px solid ${palette.primary}`;
+          e.currentTarget.style.boxShadow = `0 0 0 3px #1a56db1a`;
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.border = `1px solid ${error ? palette.error : '#D1D5DB'}`;
+          e.currentTarget.style.boxShadow = `0 1px 2px rgba(0,0,0,0.05)`;
         }}
       />
+      {error && <span className="text-[11px] font-semibold mt-1.5 block" style={{ color: palette.error }}>{error}</span>}
     </div>
   );
 }
