@@ -8,6 +8,8 @@ import { useBudget } from '@/lib/budget-store';
 import { useThemeContext, visualThemes } from '@/lib/theme-provider';
 import { Language } from '@/lib/budget-data';
 import { cn } from '@/lib/utils';
+import { storage } from '@/lib/storage';
+import { LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -80,6 +82,49 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+        </Card>
+
+        
+        {/* Cloud Sync */}
+        <SectionTitle title={label("Cloud Sync", "Synchronisation Cloud")} />
+        <Card className="flex flex-col gap-3">
+          <div className="flex flex-row items-center gap-3">
+            <RoundIcon icon={Globe} size={36} color={palette.primary} background="#EAF0FF" />
+            <div className="flex-1">
+              <p className="text-[14px] font-bold" style={{ color: palette.foreground }}>
+                {label("Cross-device Sync", "Synchronisation")}
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: palette.muted }}>
+                {label("Backup your data to access it anywhere", "Sauvegardez vos données pour y accéder partout")}
+              </p>
+            </div>
+          </div>
+          {typeof window !== 'undefined' && storage.getItem('budgetly_jwt') ? (
+            <div className="flex flex-row gap-2 mt-2">
+              <div className="flex-1 py-2.5 rounded-xl border flex items-center justify-center bg-gray-50">
+                <span className="text-[13px] font-bold text-gray-500">{label("Logged in", "Connecté")}</span>
+              </div>
+              <button 
+                onClick={() => {
+                  storage.removeItem('budgetly_jwt');
+                  window.location.reload();
+                }}
+                className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity flex items-center justify-center gap-2" 
+                style={{ backgroundColor: '#FEE2E2', color: '#EF4444' }}
+              >
+                <LogOut size={16} />
+                {label("Logout", "Déconnexion")}
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => router.push('/auth')} 
+              className="w-full mt-2 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity" 
+              style={{ backgroundColor: palette.primary, color: 'white' }}
+            >
+              {label("Set up Cloud Sync", "Configurer la synchronisation Cloud")}
+            </button>
+          )}
         </Card>
 
         {/* Notifications */}
