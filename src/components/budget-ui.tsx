@@ -49,7 +49,9 @@ export function Card({ children, className, style }: { children: React.ReactNode
       style={{ 
         borderRadius: 22,
         backgroundColor: palette.surface, 
-        border: `1px solid ${palette.border}`,
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: palette.border,
         boxShadow: `0px 2px 8px rgba(0, 0, 0, 0.05)`,
         ...style 
       }}

@@ -74,16 +74,16 @@ export default function BudgetScreen() {
                     <div className="flex flex-row items-center gap-2.5 flex-1 min-w-0">
                       <RoundIcon icon={PieChart} size={42} color={item.color} background={`${item.color}18`} />
                       <div className="min-w-0">
-                        <p className="text-[15px] font-extrabold truncate" style={{ color: palette.foreground }}>{categoryName(item.id)}</p>
-                        <p className="text-[12px] mt-[3px]" style={{ color: palette.muted }}>{formatMoney(spent, language)} {t("spent")}</p>
+                        <span className="block text-[15px] font-extrabold truncate" style={{ color: palette.foreground }}>{categoryName(item.id)}</span>
+                        <span className="block text-[12px] mt-[3px]" style={{ color: palette.muted }}>{formatMoney(spent, language)} {t("spent")}</span>
                       </div>
                     </div>
-                    <p className="text-[12px] font-extrabold text-right max-w-[100px]" style={{ color: over ? palette.error : palette.success }}>
+                    <span className="block text-[12px] font-extrabold text-right max-w-[100px]" style={{ color: over ? palette.error : palette.success }}>
                       {over 
                         ? `${formatMoney(spent - item.limit, language)} ${label("over", "dépassé")}`
                         : `${formatMoney(item.limit - spent, language)} ${label("left", "restant")}`
                       }
-                    </p>
+                    </span>
                   </div>
                   <ProgressBar 
                     value={ratio} 
@@ -120,12 +120,12 @@ export default function BudgetScreen() {
         >
           <RoundIcon icon={Landmark} size={42} color={palette.primary} background="white" />
           <div className="flex-1 min-w-0">
-            <p className="text-[16px] font-extrabold" style={{ color: palette.primary }}>
+            <span className="block text-[16px] font-extrabold" style={{ color: palette.primary }}>
               {language === "fr" ? "Définir une limite globale" : "Set a spending limit"}
-            </p>
-            <p className="text-[13px] mt-1 leading-[18px]" style={{ color: '#5478D2' }}>
+            </span>
+            <span className="block text-[13px] mt-1 leading-[18px]" style={{ color: '#5478D2' }}>
               {language === "fr" ? "Compare tes dépenses à une cible mensuelle simple." : "Compare your expenses with one simple monthly target."}
-            </p>
+            </span>
           </div>
           <ChevronRight size={22} color={palette.primary} />
         </button>
