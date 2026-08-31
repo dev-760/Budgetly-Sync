@@ -32,7 +32,7 @@ export default function TransactionsScreen() {
   );
 
   return (
-    <div className="flex flex-col h-full w-full px-5" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full max-w-[800px] mx-auto px-5" style={{ backgroundColor: palette.background }}>
       {/* Header */}
       <div className="flex flex-row items-center justify-end pt-3.5 mb-[18px]">
         <button 

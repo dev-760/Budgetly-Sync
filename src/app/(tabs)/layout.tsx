@@ -8,6 +8,7 @@ import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
 import { cn } from '@/lib/utils';
 import { OnboardingCheck } from '@/components/auth-check';
+import { BrandLockup } from '@/components/budget-ui';
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -33,10 +34,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
           style={{ backgroundColor: palette.surface, borderColor: palette.border }}
         >
           <div className="mb-8 px-3 hidden lg:flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: palette.primary }}>
-              <Wallet size={18} color="white" />
-            </div>
-            <h1 className="text-xl font-extrabold" style={{ color: palette.foreground }}>Budgetly</h1>
+            <BrandLockup compact />
           </div>
           {screens.map((screen) => {
             const isActive = pathname === screen.name || (screen.name !== '/' && pathname.startsWith(screen.name));

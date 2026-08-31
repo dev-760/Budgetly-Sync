@@ -22,7 +22,7 @@ export default function BudgetScreen() {
     .reduce<Record<string, number>>((sum, item) => ({ ...sum, [item.categoryId]: (sum[item.categoryId] ?? 0) + item.amount }), {});
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-11">
         {/* Header */}
         <div className="flex flex-row items-center justify-end mb-[18px]">
@@ -35,20 +35,9 @@ export default function BudgetScreen() {
           </button>
         </div>
 
-        {/* Summary Card */}
-        <Card 
-          className="flex flex-row justify-between items-center p-5" 
-          style={{ backgroundColor: palette.foreground, borderColor: palette.foreground }}
-        >
-          <div>
-            <p className="text-white/70 text-[13px] font-bold">{t("safeToSpend")}</p>
-            <p className="text-white text-[29px] font-extrabold tracking-[-0.8px] mt-1.5">{formatMoney(finance.safeToSpend, language)}</p>
-            <p className="text-white/70 text-[12px] mt-1.5">{formatMoney(finance.dailySafeToSpend, language)} / {language === "fr" ? "jour" : "day"}</p>
-          </div>
-          <RoundIcon icon={Wallet} size={54} color="white" background="rgba(255,255,255,0.16)" />
-        </Card>
-
-        <SectionTitle title={t("budgetHealth")} />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6">
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <SectionTitle title={t("budgetHealth")} />
 
         {/* Budget List */}
         {budgets.length === 0 ? (
@@ -106,7 +95,24 @@ export default function BudgetScreen() {
           </div>
         )}
 
-        {/* Spending Limit Card */}
+        
+          </div>
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {/* Summary Card */}
+        <Card 
+          className="flex flex-row justify-between items-center p-5" 
+          style={{ backgroundColor: palette.foreground, borderColor: palette.foreground }}
+        >
+          <div>
+            <p className="text-white/70 text-[13px] font-bold">{t("safeToSpend")}</p>
+            <p className="text-white text-[29px] font-extrabold tracking-[-0.8px] mt-1.5">{formatMoney(finance.safeToSpend, language)}</p>
+            <p className="text-white/70 text-[12px] mt-1.5">{formatMoney(finance.dailySafeToSpend, language)} / {language === "fr" ? "jour" : "day"}</p>
+          </div>
+          <RoundIcon icon={Wallet} size={54} color="white" background="rgba(255,255,255,0.16)" />
+        </Card>
+
+        
+{/* Spending Limit Card */}
         <button
           onClick={() => router.push('/monthly-limit')}
           className="flex flex-row items-center gap-3.5 rounded-[22px] p-4 mt-5 mb-5 w-full active:opacity-70 transition-opacity text-left"
@@ -123,6 +129,9 @@ export default function BudgetScreen() {
           </div>
           <ChevronRight size={22} color={palette.primary} />
         </button>
+
+          </div>
+        </div>
       </div>
     </div>
   );

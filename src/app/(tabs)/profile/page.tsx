@@ -17,7 +17,7 @@ export default function ProfileScreen() {
   const localProfileSubtitle = settings.language === "fr" ? "Nom et photo enregistrés sur cet appareil" : "Name and photo stored on this device";
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-7">
         {/* Header */}
         <div className="mb-[18px]">
@@ -25,7 +25,9 @@ export default function ProfileScreen() {
           <p className="text-[12px] mt-1.5" style={{ color: palette.muted }}>{t("studentTip")}</p>
         </div>
 
-        {/* Profile Card */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="flex flex-col gap-4">
+            {/* Profile Card */}
         <button
           onClick={() => router.push('/profile-edit')}
           className="w-full flex flex-row items-center gap-4 rounded-[24px] border p-[18px] mb-5 active:opacity-70 transition-opacity text-left"
@@ -50,7 +52,8 @@ export default function ProfileScreen() {
           <ChevronRight size={24} color={palette.muted} />
         </button>
 
-        {/* Preferences */}
+        
+{/* Preferences */}
         <SectionTitle title={t("preferences")} action={settings.language === "fr" ? "Réglages" : "Settings"} onPress={() => router.push('/settings')} />
         <Card className="py-1.5">
           <p className="text-[12px] font-bold pt-2.5 px-2.5" style={{ color: palette.muted }}>{t("language")}</p>
@@ -95,7 +98,10 @@ export default function ProfileScreen() {
           </div>
         </Card>
 
-        {/* Goals */}
+        
+          </div>
+          <div className="flex flex-col gap-4">
+            {/* Goals */}
         <SectionTitle title={t("goals")} action={t("addGoal")} onPress={() => router.push('/goal')} />
         <Card className="p-0 overflow-hidden">
           {goals.length ? goals.map((goal, i) => (
@@ -123,7 +129,8 @@ export default function ProfileScreen() {
           )}
         </Card>
 
-        {/* Recurring Items */}
+        
+{/* Recurring Items */}
         <SectionTitle title={t("recurringItems")} />
         <Card className="p-0 overflow-hidden">
           {recurring.length ? recurring.map((item, i) => (
@@ -149,7 +156,8 @@ export default function ProfileScreen() {
           )}
         </Card>
 
-        {/* Reset */}
+        
+{/* Reset */}
         <button
           onClick={() => { if (confirm(settings.language === "fr" ? "Cette action efface les données financières enregistrées sur cet appareil." : "This erases the finance data saved on this device.")) clearLocalData(); }}
           className="mt-5 mx-auto flex flex-row items-center gap-1.5 p-3 active:opacity-70 transition-opacity"
@@ -158,7 +166,10 @@ export default function ProfileScreen() {
           <span className="text-[13px] font-bold" style={{ color: palette.error }}>{t("clearLocalData")}</span>
         </button>
 
-        {/* Brand Footer */}
+        
+          </div>
+        </div>
+{/* Brand Footer */}
         <div className="mt-8 flex flex-col items-center pb-5">
           <BrandLockup compact />
           <a href="https://github.com/dev-760" target="_blank" rel="noopener noreferrer" className="mt-3 text-[13px] font-semibold" style={{ color: palette.muted }}>

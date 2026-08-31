@@ -17,18 +17,38 @@ export default function FinanceScreen() {
   const recurringIncome = recurring.filter((item) => item.kind === "income");
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-6 pb-10">
         
 
-        {/* Net Worth Card */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6">
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            {/* Net Worth Card */}
         <div className="mt-5 rounded-[22px] p-5" style={{ backgroundColor: palette.foreground }}>
           <p className="text-white/70 text-[13px] font-bold">{label("Net worth", "Patrimoine net")}</p>
           <p className="text-white text-[36px] font-extrabold tracking-[-1px] mt-2 tabular-nums">{formatMoney(finance.netWorth, settings.language)}</p>
           <p className="text-white/50 text-[12px] mt-2">{label("Buckets + receivables − liabilities", "Comptes + créances − dettes")}</p>
         </div>
 
-        {/* Quick Actions */}
+        
+{/* Buckets */}
+        <SectionTitle title={label("Buckets", "Comptes")} action={label("Manage", "Gérer")} onPress={() => router.push('/finance-manage?mode=transfer')} />
+        <div className="grid grid-cols-2 gap-3">
+          {buckets.map((bucket) => (
+            <Card key={bucket.id} className="p-3.5 flex flex-col gap-2.5">
+              <RoundIcon icon={Wallet} size={35} color={bucket.color} background={bucket.id === "cash" ? "#E7F7F1" : "#EAF0FF"} />
+              <p className="text-[12px] font-bold" style={{ color: palette.muted }}>{bucket.name}</p>
+              <p className="text-[17px] font-extrabold tabular-nums" style={{ color: palette.foreground }}>
+                {formatMoney(bucket.balance, settings.language)}
+              </p>
+            </Card>
+          ))}
+        </div>
+
+        
+          </div>
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {/* Quick Actions */}
         <div className="flex flex-row gap-2.5 mt-4">
           <button 
             onClick={() => router.push('/transaction?kind=income')}
@@ -48,7 +68,8 @@ export default function FinanceScreen() {
           </button>
         </div>
 
-        {/* Monthly Income */}
+        
+{/* Monthly Income */}
         <SectionTitle title={label("Monthly income", "Revenu mensuel")} action={label("Calendar", "Calendrier")} onPress={() => router.push('/income-calendar')} />
         <Card className="p-0 overflow-hidden">
           {recurringIncome.length ? (
@@ -77,21 +98,8 @@ export default function FinanceScreen() {
           )}
         </Card>
 
-        {/* Buckets */}
-        <SectionTitle title={label("Buckets", "Comptes")} action={label("Manage", "Gérer")} onPress={() => router.push('/finance-manage?mode=transfer')} />
-        <div className="grid grid-cols-2 gap-3">
-          {buckets.map((bucket) => (
-            <Card key={bucket.id} className="p-3.5 flex flex-col gap-2.5">
-              <RoundIcon icon={Wallet} size={35} color={bucket.color} background={bucket.id === "cash" ? "#E7F7F1" : "#EAF0FF"} />
-              <p className="text-[12px] font-bold" style={{ color: palette.muted }}>{bucket.name}</p>
-              <p className="text-[17px] font-extrabold tabular-nums" style={{ color: palette.foreground }}>
-                {formatMoney(bucket.balance, settings.language)}
-              </p>
-            </Card>
-          ))}
-        </div>
-
-        {/* Commitments */}
+        
+{/* Commitments */}
         <SectionTitle title={label("Commitments", "Engagements")} action={label("Manage", "Gérer")} onPress={() => router.push('/finance-manage?mode=subscription')} />
         <Card className="p-0 overflow-hidden">
           <LineItem icon={RefreshCw} color={palette.warning} title={label("Subscriptions", "Abonnements")} value={formatMoney(finance.subscriptionTotal, settings.language)} borderColor={palette.border} />
@@ -107,7 +115,10 @@ export default function FinanceScreen() {
         </Card>
 
         
-      </div>
+      
+          </div>
+        </div>
+</div>
     </div>
   );
 }

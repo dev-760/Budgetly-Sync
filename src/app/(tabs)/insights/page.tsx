@@ -51,7 +51,7 @@ export default function InsightsScreen() {
   const top = categories[0];
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-7">
         <div className="flex flex-row justify-end items-start">
           <div className="relative">
@@ -75,7 +75,9 @@ export default function InsightsScreen() {
           </div>
         </div>
 
-        <Card className="mt-[18px] p-5" style={{ backgroundColor: palette.foreground, borderColor: palette.foreground, borderRadius: 23 }}>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6 mt-[18px]">
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <Card className=" p-5" style={{ backgroundColor: palette.foreground, borderColor: palette.foreground, borderRadius: 23 }}>
           <div className="flex flex-row justify-between">
             <div>
               <p className="text-[#BFD0FF] text-[12px] font-bold">{label("Monthly balance", "Solde mensuel")}</p>
@@ -96,7 +98,8 @@ export default function InsightsScreen() {
           </div>
         </Card>
 
-        <SectionTitle title={label("Income & spending", "Revenus et dépenses")} />
+        
+<SectionTitle title={label("Income & spending", "Revenus et dépenses")} />
         <Card className="flex flex-row items-center gap-4 p-4">
           <div className="relative w-[108px] h-[108px]">
             <svg width="108" height="108" viewBox="0 0 108 108">
@@ -122,39 +125,8 @@ export default function InsightsScreen() {
           </div>
         </Card>
 
-        <SectionTitle title={label("Compared with last month", "Comparé au mois dernier")} />
-        <Card className="p-4">
-          {prevIncome || prevSpending ? (
-            <div className="flex flex-row justify-between gap-2">
-              <CompareMetric label={label("Income", "Revenus")} value={formatMoney(income, language)} change={percentChange(income, prevIncome)} positive fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
-              <CompareMetric label={label("Spending", "Dépenses")} value={formatMoney(spending, language)} change={percentChange(spending, prevSpending)} positive={false} fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
-              <CompareMetric label={label("Net", "Net")} value={formatMoney(Math.abs(net), language)} change={percentChange(net, prevNet)} positive={net >= prevNet} fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
-            </div>
-          ) : (
-            <p className="text-[13px] leading-[18px] text-center py-3.5" style={{ color: palette.muted }}>
-              {label("Add entries next month to unlock your month-to-month comparison.", "Ajoute des opérations le mois prochain pour débloquer la comparaison mensuelle.")}
-            </p>
-          )}
-        </Card>
-
-        <SectionTitle title={label("Last 7 days", "7 derniers jours")} />
-        <Card>
-          <div className="flex flex-row justify-between mb-2">
-            <span className="text-[12px] font-bold" style={{ color: palette.muted }}>{label("Daily spending", "Dépenses quotidiennes")}</span>
-            <span className="text-[12px] font-extrabold" style={{ color: palette.foreground }}>{formatMoney(weekly.reduce((s, i) => s + i.amount, 0), language)}</span>
-          </div>
-          <div className="h-[142px] flex flex-row items-end justify-between px-[3px]">
-            {weekly.map((item, i) => (
-              <div key={`${item.day}-${i}`} className="flex flex-col items-center gap-[7px] w-7">
-                <div className="w-[18px] rounded-full" style={{ height: Math.max(item.amount ? 12 : 4, 104 * (item.amount / weeklyMax)), backgroundColor: i === 6 ? palette.primary : "#BFD0FF" }} />
-                <span className="text-[10px] font-extrabold" style={{ color: palette.muted }}>{item.day}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[11px] mt-3" style={{ color: palette.muted }}>{label("The latest day is highlighted in blue.", "Le dernier jour est en bleu.")}</p>
-        </Card>
-
-        <SectionTitle title={label("Where your money went", "Répartition des dépenses")} />
+        
+<SectionTitle title={label("Where your money went", "Répartition des dépenses")} />
         <Card>
           {categories.length ? categories.map(([id, amount], i) => (
             <button key={id} onClick={() => router.push(`/transactions?category=${id}`)} className="w-full mb-4 last:mb-0 active:opacity-70 transition-opacity text-left">
@@ -184,7 +156,47 @@ export default function InsightsScreen() {
             </div>
           </Card>
         )}
-      </div>
+      
+          </div>
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <SectionTitle title={label("Compared with last month", "Comparé au mois dernier")} />
+        <Card className="p-4">
+          {prevIncome || prevSpending ? (
+            <div className="flex flex-row justify-between gap-2">
+              <CompareMetric label={label("Income", "Revenus")} value={formatMoney(income, language)} change={percentChange(income, prevIncome)} positive fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
+              <CompareMetric label={label("Spending", "Dépenses")} value={formatMoney(spending, language)} change={percentChange(spending, prevSpending)} positive={false} fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
+              <CompareMetric label={label("Net", "Net")} value={formatMoney(Math.abs(net), language)} change={percentChange(net, prevNet)} positive={net >= prevNet} fg={palette.foreground} muted={palette.muted} success={palette.success} error={palette.error} />
+            </div>
+          ) : (
+            <p className="text-[13px] leading-[18px] text-center py-3.5" style={{ color: palette.muted }}>
+              {label("Add entries next month to unlock your month-to-month comparison.", "Ajoute des opérations le mois prochain pour débloquer la comparaison mensuelle.")}
+            </p>
+          )}
+        </Card>
+
+        
+<SectionTitle title={label("Last 7 days", "7 derniers jours")} />
+        <Card>
+          <div className="flex flex-row justify-between mb-2">
+            <span className="text-[12px] font-bold" style={{ color: palette.muted }}>{label("Daily spending", "Dépenses quotidiennes")}</span>
+            <span className="text-[12px] font-extrabold" style={{ color: palette.foreground }}>{formatMoney(weekly.reduce((s, i) => s + i.amount, 0), language)}</span>
+          </div>
+          <div className="h-[142px] flex flex-row items-end justify-between px-[3px]">
+            {weekly.map((item, i) => (
+              <div key={`${item.day}-${i}`} className="flex flex-col items-center gap-[7px] w-7">
+                <div className="w-[18px] rounded-full" style={{ height: Math.max(item.amount ? 12 : 4, 104 * (item.amount / weeklyMax)), backgroundColor: i === 6 ? palette.primary : "#BFD0FF" }} />
+                <span className="text-[10px] font-extrabold" style={{ color: palette.muted }}>{item.day}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] mt-3" style={{ color: palette.muted }}>{label("The latest day is highlighted in blue.", "Le dernier jour est en bleu.")}</p>
+        </Card>
+
+        
+
+          </div>
+        </div>
+</div>
     </div>
   );
 }

@@ -39,9 +39,7 @@ export default function HomePage() {
           <BrandLockup compact />
           <p className="mt-2 text-[13px]" style={{ color: palette.muted }}>{t("goodMorning")}</p>
         </div>
-        <div className="hidden md:block">
-          <h1 className="text-2xl font-extrabold" style={{ color: palette.foreground }}>{label("Dashboard", "Tableau de bord")}</h1>
-        </div>
+        
         <button 
           onClick={() => router.push("/notifications")}
           className="relative w-[42px] h-[42px] rounded-2xl flex items-center justify-center border active:scale-95 transition-transform"
