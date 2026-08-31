@@ -15,7 +15,7 @@ const percentChange = (current: number, previous: number) => previous > 0 ? Math
 
 export default function InsightsScreen() {
   const { settings, transactions, goals, categoryName, finance } = useBudget();
-  const { palette } = useThemeContext();
+  const { palette, colorScheme } = useThemeContext();
   const router = useRouter();
   const [monthOffset, setMonthOffset] = React.useState(0);
   const language = settings.language;
@@ -77,7 +77,7 @@ export default function InsightsScreen() {
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6 mt-[18px]">
           <div className="md:col-span-7 flex flex-col gap-4">
-            <Card className=" p-5" style={{ backgroundColor: palette.foreground, borderColor: palette.foreground, borderRadius: 16 }}>
+            <Card className=" p-5" style={{ backgroundColor: colorScheme === 'dark' ? palette.surface : palette.foreground, borderColor: colorScheme === 'dark' ? palette.surface : palette.foreground, borderRadius: 16 }}>
           <div className="flex flex-row justify-between">
             <div>
               <p className="text-[#BFD0FF] text-[12px] font-bold">{label("Monthly balance", "Solde mensuel")}</p>

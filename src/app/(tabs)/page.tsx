@@ -13,7 +13,7 @@ import { FormattedDate } from '@/components/budget-ui';
 export default function HomePage() {
   const router = useRouter();
   const { settings, transactions, budgets, recurring, buckets, notifications, finance, t, categoryName } = useBudget();
-  const { palette } = useThemeContext();
+  const { palette, colorScheme } = useThemeContext();
   const language = settings.language;
   const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
@@ -84,7 +84,7 @@ export default function HomePage() {
       <div className="flex flex-row gap-3 mt-3.5">
         <Card className="flex-1 min-h-[132px] p-[15px] flex flex-col justify-between">
           <div>
-            <RoundIcon icon={Wallet} size={34} color={palette.primary} background="#EAF0FF" />
+            <RoundIcon icon={Wallet} size={34} color={palette.primary} background={palette.softPrimary} />
             <p className="mt-3.5 text-[12px] font-semibold" style={{ color: palette.muted }}>{t("availableBalance")}</p>
           </div>
           <MoneyText amount={finance.availableBalance} language={language} className="mt-1.5 text-[18px]" />

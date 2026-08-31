@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export default function ProfileScreen() {
   const { settings, goals, recurring, setLanguage, toggleNotifications, clearLocalData, t } = useBudget();
-  const { palette } = useThemeContext();
+  const { palette, colorScheme } = useThemeContext();
   const router = useRouter();
   const profileName = settings.displayName || (settings.language === "fr" ? "Ton profil" : "Your profile");
   const localProfileSubtitle = settings.language === "fr" ? "Nom et photo enregistrés sur cet appareil" : "Name and photo stored on this device";
@@ -44,7 +44,7 @@ export default function ProfileScreen() {
             <p className="text-[18px] font-extrabold truncate" style={{ color: palette.foreground }}>{profileName}</p>
             <p className="text-[13px] mt-1 leading-[18px]" style={{ color: palette.muted }}>{localProfileSubtitle}</p>
           </div>
-          <div className="rounded-xl px-2.5 py-1.5" style={{ backgroundColor: '#EEF3FF' }}>
+          <div className="rounded-xl px-2.5 py-1.5" style={{ backgroundColor: palette.softPrimary }}>
             <span className="text-[12px] font-extrabold" style={{ color: palette.primary }}>
               {settings.language === "fr" ? "Modifier" : "Edit"}
             </span>
@@ -77,7 +77,7 @@ export default function ProfileScreen() {
           <div className="h-px mx-2.5" style={{ backgroundColor: palette.border }} />
           <div className="h-[62px] flex flex-row items-center justify-between px-2.5">
             <div className="flex flex-row items-center gap-2.5">
-              <RoundIcon icon={Bell} size={36} color={palette.primary} background="#EAF0FF" />
+              <RoundIcon icon={Bell} size={36} color={palette.primary} background={palette.softPrimary} />
               <span className="text-[14px] font-bold" style={{ color: palette.foreground }}>{t("notificationsEnabled")}</span>
             </div>
             <button

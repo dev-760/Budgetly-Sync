@@ -10,7 +10,7 @@ import { useThemeContext } from '@/lib/theme-provider';
 
 export default function FinanceScreen() {
   const { settings, recurring, buckets, finance } = useBudget();
-  const { palette } = useThemeContext();
+  const { palette, colorScheme } = useThemeContext();
   const router = useRouter();
   const isFrench = settings.language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
@@ -24,7 +24,7 @@ export default function FinanceScreen() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6">
           <div className="md:col-span-7 flex flex-col gap-4">
             {/* Net Worth Card */}
-        <div className="mt-5 rounded-2xl p-5" style={{ backgroundColor: palette.foreground }}>
+        <div className="mt-5 rounded-2xl p-5" style={{ backgroundColor: colorScheme === 'dark' ? palette.surface : palette.foreground }}>
           <p className="text-white/70 text-[13px] font-bold">{label("Net worth", "Patrimoine net")}</p>
           <p className="text-white text-[36px] font-extrabold tracking-[-1px] mt-2 tabular-nums">{formatMoney(finance.netWorth, settings.language)}</p>
           <p className="text-white/50 text-[12px] mt-2">{label("Buckets + receivables − liabilities", "Comptes + créances − dettes")}</p>

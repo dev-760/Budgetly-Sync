@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export default function BudgetScreen() {
   const { settings, budgets, transactions, finance, t, categoryName } = useBudget();
-  const { palette } = useThemeContext();
+  const { palette, colorScheme } = useThemeContext();
   const router = useRouter();
   const language = settings.language;
   const isFrench = language === "fr";
@@ -101,7 +101,7 @@ export default function BudgetScreen() {
             {/* Summary Card */}
         <Card 
           className="flex flex-row justify-between items-center p-5" 
-          style={{ backgroundColor: palette.foreground, borderColor: palette.foreground }}
+          style={{ backgroundColor: colorScheme === 'dark' ? palette.surface : palette.foreground, borderColor: colorScheme === 'dark' ? palette.surface : palette.foreground }}
         >
           <div>
             <p className="text-white/70 text-[13px] font-bold">{t("safeToSpend")}</p>
@@ -116,14 +116,14 @@ export default function BudgetScreen() {
         <button
           onClick={() => router.push('/monthly-limit')}
           className="flex flex-row items-center gap-3.5 rounded-2xl p-4 mt-5 mb-5 w-full active:opacity-70 transition-opacity text-left"
-          style={{ backgroundColor: '#EEF3FF' }}
+          style={{ backgroundColor: palette.softPrimary }}
         >
           <RoundIcon icon={Landmark} size={42} color={palette.primary} background="white" />
           <div className="flex-1 min-w-0">
             <span className="block text-[16px] font-extrabold" style={{ color: palette.primary }}>
               {language === "fr" ? "Définir une limite globale" : "Set a spending limit"}
             </span>
-            <span className="block text-[13px] mt-1 leading-[18px]" style={{ color: '#5478D2' }}>
+            <span className="block text-[13px] mt-1 leading-[18px]" style={{ color: colorScheme === 'dark' ? '#93C5FD' : '#5478D2' }}>
               {language === "fr" ? "Compare tes dépenses à une cible mensuelle simple." : "Compare your expenses with one simple monthly target."}
             </span>
           </div>
