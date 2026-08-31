@@ -17,10 +17,12 @@ export default function InsightsScreen() {
   const { settings, transactions, goals, categoryName, finance } = useBudget();
   const { palette } = useThemeContext();
   const router = useRouter();
+  const [monthOffset, setMonthOffset] = React.useState(0);
   const language = settings.language;
   const isFrench = language === "fr";
   const label = (en: string, fr: string) => isFrench ? fr : en;
   const now = new Date();
+  now.setMonth(now.getMonth() + monthOffset);
 
   const thisMonth = transactions.filter((item) => { const d = new Date(item.date); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); });
   const income = thisMonth.filter((item) => item.kind==="income").reduce((sum, item) => sum + item.amount, 0);
@@ -51,14 +53,25 @@ export default function InsightsScreen() {
   return (
     <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-7">
-        <div className="flex flex-row justify-between items-start">
-          <div>
-            <h1 className="text-[27px] font-extrabold tracking-[-0.8px]" style={{ color: palette.foreground }}>{label("Monthly dashboard", "Tableau mensuel")}</h1>
-            <p className="text-[12px] mt-1.5" style={{ color: palette.muted }}>{label("Your money story, based on this device.", "Ton aperçu, basé sur cet appareil.")}</p>
-          </div>
-          <div className="flex flex-row items-center gap-1.5 rounded-xl px-2.5 py-[7px]" style={{ backgroundColor: "#EAF0FF" }}>
-            <CalendarRange size={16} color={palette.primary} />
-            <span className="text-[11px] font-bold" style={{ color: palette.primary }}>{label("This month", "Ce mois-ci")}</span>
+        <div className="flex flex-row justify-end items-start">
+          <div className="relative">
+            <select 
+              className="appearance-none outline-none border-none flex flex-row items-center gap-1.5 rounded-xl pl-3 pr-8 py-[7px] cursor-pointer font-bold text-[11px]" 
+              style={{ backgroundColor: "#EAF0FF", color: palette.primary }}
+              value={monthOffset}
+              onChange={(e) => setMonthOffset(Number(e.target.value))}
+            >
+              <option value={0}>{label("This month", "Ce mois-ci")}</option>
+              <option value={-1}>{label("Last month", "Mois dernier")}</option>
+              <option value={-2}>{label("2 months ago", "Il y a 2 mois")}</option>
+              <option value={-3}>{label("3 months ago", "Il y a 3 mois")}</option>
+              <option value={-4}>{label("4 months ago", "Il y a 4 mois")}</option>
+              <option value={-5}>{label("5 months ago", "Il y a 5 mois")}</option>
+              <option value={-6}>{label("6 months ago", "Il y a 6 mois")}</option>
+            </select>
+            <div className="absolute right-2.5 top-2 pointer-events-none">
+              <CalendarRange size={14} color={palette.primary} />
+            </div>
           </div>
         </div>
 

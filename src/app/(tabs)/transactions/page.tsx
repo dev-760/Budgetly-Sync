@@ -34,11 +34,7 @@ export default function TransactionsScreen() {
   return (
     <div className="flex flex-col h-full w-full px-5" style={{ backgroundColor: palette.background }}>
       {/* Header */}
-      <div className="flex flex-row items-center justify-between pt-3.5 mb-[18px]">
-        <div>
-          <h1 className="text-[28px] font-extrabold tracking-[-0.7px]" style={{ color: palette.foreground }}>{t("transactions")}</h1>
-          <p className="text-[13px] mt-0.5" style={{ color: palette.muted }}>{t("thisMonth")}</p>
-        </div>
+      <div className="flex flex-row items-center justify-end pt-3.5 mb-[18px]">
         <button 
           onClick={() => router.push('/transaction?kind=expense')}
           className="w-11 h-11 rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"

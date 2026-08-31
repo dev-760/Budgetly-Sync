@@ -18,13 +18,8 @@ export default function FinanceScreen() {
 
   return (
     <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
-      <div className="pt-2.5 pb-10">
-        <h1 className="text-[28px] font-extrabold tracking-[-0.7px] mt-3.5" style={{ color: palette.foreground }}>
-          {label("Finance board", "Vue financière")}
-        </h1>
-        <p className="text-[13px] mt-1 leading-[18px] max-w-[310px]" style={{ color: palette.muted }}>
-          {label("Everything you own, owe, and plan — kept on this device.", "Ce que tu possèdes, dois et prévois — conservé sur cet appareil.")}
-        </p>
+      <div className="pt-6 pb-10">
+        
 
         {/* Net Worth Card */}
         <div className="mt-5 rounded-[22px] p-5" style={{ backgroundColor: palette.foreground }}>
@@ -111,10 +106,7 @@ export default function FinanceScreen() {
           <LineItem icon={ArrowLeftRight} color={palette.primary} title={label("Lent to others", "Prêté à d'autres")} value={formatMoney(finance.lentOutstanding, settings.language)} borderColor={palette.border} noBorder />
         </Card>
 
-        <p className="text-[11px] mt-6 text-center leading-[17px]" style={{ color: palette.muted }}>
-          <Lock size={11} className="inline mr-1" />
-          {label("Private by default: this board is stored locally on your device.", "Privé par défaut : cette vue est conservée localement sur ton appareil.")}
-        </p>
+        
       </div>
     </div>
   );

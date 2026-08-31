@@ -25,11 +25,7 @@ export default function BudgetScreen() {
     <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-11">
         {/* Header */}
-        <div className="flex flex-row items-center justify-between mb-[18px]">
-          <div>
-            <h1 className="text-[28px] font-extrabold tracking-[-0.7px]" style={{ color: palette.foreground }}>{t("budget")}</h1>
-            <p className="text-[13px] mt-0.5" style={{ color: palette.muted }}>{t("monthlyPlan")}</p>
-          </div>
+        <div className="flex flex-row items-center justify-end mb-[18px]">
           <button 
             onClick={() => router.push('/budget-edit')}
             className="w-11 h-11 rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"
