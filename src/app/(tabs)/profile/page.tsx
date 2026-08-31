@@ -17,7 +17,7 @@ export default function ProfileScreen() {
   const localProfileSubtitle = settings.language === "fr" ? "Nom et photo enregistrés sur cet appareil" : "Name and photo stored on this device";
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-7">
         {/* Header */}
         <div className="mb-[18px]">

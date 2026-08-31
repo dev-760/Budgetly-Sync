@@ -22,7 +22,7 @@ export default function BudgetScreen() {
     .reduce<Record<string, number>>((sum, item) => ({ ...sum, [item.categoryId]: (sum[item.categoryId] ?? 0) + item.amount }), {});
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-11">
         {/* Header */}
         <div className="flex flex-row items-center justify-between mb-[18px]">

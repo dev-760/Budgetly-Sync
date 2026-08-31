@@ -15,6 +15,8 @@ export default function HomePage() {
   const { settings, transactions, budgets, recurring, buckets, notifications, finance, t, categoryName } = useBudget();
   const { palette } = useThemeContext();
   const language = settings.language;
+  const isFrench = language === "fr";
+  const label = (en: string, fr: string) => isFrench ? fr : en;
   
   const recent = transactions.slice(0, 3);
   const upcoming = recurring.slice(0, 2);
@@ -33,9 +35,12 @@ export default function HomePage() {
     <div className="flex-1 w-full pb-10 px-5 pt-4">
       {/* Header */}
       <div className="flex flex-row items-center justify-between mb-5">
-        <div>
+        <div className="md:hidden">
           <BrandLockup compact />
           <p className="mt-2 text-[13px]" style={{ color: palette.muted }}>{t("goodMorning")}</p>
+        </div>
+        <div className="hidden md:block">
+          <h1 className="text-2xl font-extrabold" style={{ color: palette.foreground }}>{label("Dashboard", "Tableau de bord")}</h1>
         </div>
         <button 
           onClick={() => router.push("/notifications")}
@@ -49,6 +54,9 @@ export default function HomePage() {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6">
+        <div className="lg:col-span-8 flex flex-col gap-0">
+          
       {/* Safe to Spend Card */}
       <div 
         className="rounded-[24px] p-5.5 mb-4 shadow-lg overflow-hidden relative"
@@ -94,17 +102,6 @@ export default function HomePage() {
         </Card>
       </div>
 
-      {/* Add Expense Button */}
-      <div className="flex justify-center w-full mt-4">
-        <button 
-          onClick={() => router.push('/transaction?kind=expense')}
-          className="w-full max-w-[300px] h-[52px] rounded-2xl flex flex-row items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform"
-          style={{ backgroundColor: palette.primary, boxShadow: `0 10px 15px -3px ${palette.primary}40` }}
-        >
-          <span className="text-white text-[14px] font-extrabold">{t("addExpense")}</span>
-        </button>
-      </div>
-
       {/* Recent Transactions */}
       <div className="mt-2">
         <SectionTitle title={t("recentTransactions")} action={t("viewAll")} onPress={() => router.push('/transactions')} />
@@ -144,6 +141,21 @@ export default function HomePage() {
             />
           )}
         </Card>
+      </div>
+
+              </div>
+
+        <div className="lg:col-span-4 flex flex-col gap-0">
+
+      {/* Add Expense Button */}
+      <div className="flex justify-center w-full mt-4">
+        <button 
+          onClick={() => router.push('/transaction?kind=expense')}
+          className="w-full max-w-[300px] h-[52px] rounded-2xl flex flex-row items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform"
+          style={{ backgroundColor: palette.primary, boxShadow: `0 10px 15px -3px ${palette.primary}40` }}
+        >
+          <span className="text-white text-[14px] font-extrabold">{t("addExpense")}</span>
+        </button>
       </div>
 
       {/* Finance Board Strip */}
@@ -260,6 +272,8 @@ export default function HomePage() {
             />
           )}
         </Card>
+      </div>
+        </div>
       </div>
       
     </div>

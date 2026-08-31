@@ -17,7 +17,7 @@ export default function FinanceScreen() {
   const recurringIncome = recurring.filter((item) => item.kind === "income");
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-2.5 pb-10">
         <h1 className="text-[28px] font-extrabold tracking-[-0.7px] mt-3.5" style={{ color: palette.foreground }}>
           {label("Finance board", "Vue financière")}

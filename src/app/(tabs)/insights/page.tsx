@@ -49,7 +49,7 @@ export default function InsightsScreen() {
   const top = categories[0];
 
   return (
-    <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-full w-full px-5 overflow-y-auto max-w-[800px] mx-auto" style={{ backgroundColor: palette.background }}>
       <div className="pt-3.5 pb-7">
         <div className="flex flex-row justify-between items-start">
           <div>

@@ -69,25 +69,7 @@ function TransactionForm() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pb-[100px]">
-        {/**/}
-        {!existing && (
-          <div className="flex flex-row bg-surface rounded-xl p-1 mb-6 border" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
-            <button
-              onClick={() => setKind('expense')}
-              className={cn("flex-1 py-2 rounded-lg text-[13px] font-bold text-center", kind === 'expense' ? "bg-white shadow-sm" : "")}
-              style={{ color: kind === 'expense' ? palette.error : palette.muted }}
-            >
-              {label("Expense", "Dépense")}
-            </button>
-            <button
-              onClick={() => setKind('income')}
-              className={cn("flex-1 py-2 rounded-lg text-[13px] font-bold text-center", kind === 'income' ? "bg-[#E7F7F1] shadow-sm" : "")}
-              style={{ color: kind === 'income' ? palette.success : palette.muted }}
-            >
-              {label("Income", "Revenu")}
-            </button>
-          </div>
-        )}
+        {/* Toggle removed as requested */}
 
         {/**/}
         <div className="flex flex-col mb-5">

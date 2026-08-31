@@ -65,7 +65,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto w-full relative h-full">
-          <div className="w-full max-w-[600px] lg:max-w-[800px] mx-auto h-full relative">
+          <div className="w-full max-w-[1200px] mx-auto h-full relative md:p-6 lg:p-8">
             {children}
           </div>
         </main>
