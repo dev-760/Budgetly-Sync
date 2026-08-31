@@ -42,7 +42,7 @@ export default function OnboardingScreen() {
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
-              className={cn("px-4 py-2 rounded-[20px] text-[13px] font-bold active:opacity-70 transition-all", language === lang ? "bg-white shadow-sm" : "")}
+              className={cn("px-4 py-2 rounded-2xl text-[13px] font-bold active:opacity-70 transition-all", language === lang ? "bg-white shadow-sm" : "")}
               style={{ color: language === lang ? palette.primary : palette.muted }}
             >
               {lang === "en" ? "EN" : "FR"}

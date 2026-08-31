@@ -53,7 +53,7 @@ export default function MonthlyLimitScreen() {
 
         <div className="w-full max-w-[400px]">
           <span className="text-[13px] font-extrabold ml-1 mb-2 block" style={{ color: palette.foreground }}>{label("Monthly Target", "Cible mensuelle")}</span>
-          <div className="h-[80px] rounded-[22px] px-5 flex flex-row items-center justify-between border-[1.5px] border-transparent" style={{ backgroundColor: palette.surface }}>
+          <div className="h-[80px] rounded-2xl px-5 flex flex-row items-center justify-between border-[1.5px] border-transparent" style={{ backgroundColor: palette.surface }}>
             <input
               type="number"
               inputMode="decimal"

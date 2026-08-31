@@ -52,8 +52,8 @@ export default function HomePage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6">
-        <div className="lg:col-span-8 flex flex-col gap-0">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6">
+        <div className="md:col-span-7 flex flex-col gap-0">
           
       {/* Safe to Spend Card */}
       <div 
@@ -143,7 +143,7 @@ export default function HomePage() {
 
               </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-0">
+        <div className="md:col-span-5 flex flex-col gap-0">
 
       {/* Add Expense Button */}
       <div className="flex justify-center w-full mt-4">
@@ -160,7 +160,7 @@ export default function HomePage() {
       <div className="mt-4">
         <button 
           onClick={() => router.push('/finance')}
-          className="w-full rounded-[20px] p-5 active:opacity-65 transition-opacity text-left shadow-sm"
+          className="w-full rounded-2xl p-5 active:opacity-65 transition-opacity text-left shadow-sm"
           style={{ backgroundColor: palette.surface, border: `1px solid ${palette.border}`  }}
         >
           <div className="flex flex-row justify-between items-start mb-4">

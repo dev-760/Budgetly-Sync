@@ -21,10 +21,10 @@ export default function FinanceScreen() {
       <div className="pt-6 pb-10">
         
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6">
-          <div className="lg:col-span-8 flex flex-col gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6">
+          <div className="md:col-span-7 flex flex-col gap-4">
             {/* Net Worth Card */}
-        <div className="mt-5 rounded-[22px] p-5" style={{ backgroundColor: palette.foreground }}>
+        <div className="mt-5 rounded-2xl p-5" style={{ backgroundColor: palette.foreground }}>
           <p className="text-white/70 text-[13px] font-bold">{label("Net worth", "Patrimoine net")}</p>
           <p className="text-white text-[36px] font-extrabold tracking-[-1px] mt-2 tabular-nums">{formatMoney(finance.netWorth, settings.language)}</p>
           <p className="text-white/50 text-[12px] mt-2">{label("Buckets + receivables − liabilities", "Comptes + créances − dettes")}</p>
@@ -47,7 +47,7 @@ export default function FinanceScreen() {
 
         
           </div>
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          <div className="md:col-span-5 flex flex-col gap-4">
             {/* Quick Actions */}
         <div className="flex flex-row gap-2.5 mt-4">
           <button 

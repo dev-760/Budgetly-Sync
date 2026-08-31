@@ -35,8 +35,8 @@ export default function BudgetScreen() {
           </button>
         </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6">
-          <div className="lg:col-span-8 flex flex-col gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6">
+          <div className="md:col-span-7 flex flex-col gap-4">
             <SectionTitle title={t("budgetHealth")} />
 
         {/* Budget List */}
@@ -67,7 +67,7 @@ export default function BudgetScreen() {
                 <button
                   key={item.id}
                   onClick={() => router.push(`/budget-edit?id=${item.id}`)}
-                  className="rounded-[22px] border p-3.5 active:opacity-70 transition-opacity text-left"
+                  className="rounded-2xl border p-3.5 active:opacity-70 transition-opacity text-left"
                   style={{ backgroundColor: palette.surface, borderColor: palette.border }}
                 >
                   <div className="flex flex-row justify-between items-center mb-3.5">
@@ -97,7 +97,7 @@ export default function BudgetScreen() {
 
         
           </div>
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          <div className="md:col-span-5 flex flex-col gap-4">
             {/* Summary Card */}
         <Card 
           className="flex flex-row justify-between items-center p-5" 
@@ -115,7 +115,7 @@ export default function BudgetScreen() {
 {/* Spending Limit Card */}
         <button
           onClick={() => router.push('/monthly-limit')}
-          className="flex flex-row items-center gap-3.5 rounded-[22px] p-4 mt-5 mb-5 w-full active:opacity-70 transition-opacity text-left"
+          className="flex flex-row items-center gap-3.5 rounded-2xl p-4 mt-5 mb-5 w-full active:opacity-70 transition-opacity text-left"
           style={{ backgroundColor: '#EEF3FF' }}
         >
           <RoundIcon icon={Landmark} size={42} color={palette.primary} background="white" />

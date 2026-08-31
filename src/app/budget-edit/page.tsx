@@ -134,7 +134,7 @@ function BudgetEditContent() {
               {t("budgetLimit")}
             </span>
             <div 
-              className="mt-4 w-full h-[80px] rounded-[22px] px-5 flex flex-row items-center justify-between border-[1.5px] border-transparent"
+              className="mt-4 w-full h-[80px] rounded-2xl px-5 flex flex-row items-center justify-between border-[1.5px] border-transparent"
               style={{ backgroundColor: palette.background }}
             >
               <input

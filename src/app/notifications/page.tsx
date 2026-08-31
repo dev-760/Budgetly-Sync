@@ -55,7 +55,7 @@ export default function NotificationsScreen() {
               return (
                 <div
                   key={item.id}
-                  className="min-h-[92px] rounded-[20px] border p-3.5 flex flex-row gap-[11px]"
+                  className="min-h-[92px] rounded-2xl border p-3.5 flex flex-row gap-[11px]"
                   style={{
                     backgroundColor: !item.isRead ? '#F8FAFC' : palette.surface,
                     borderColor: palette.border

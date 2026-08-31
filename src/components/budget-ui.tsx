@@ -45,14 +45,14 @@ export function Card({ children, className, style }: { children: React.ReactNode
   const { palette } = useThemeContext();
   return (
     <div 
-      className={cn("p-4", className)}
+      className={cn("p-5", className)}
       style={{ 
-        borderRadius: 22,
+        borderRadius: 16,
         backgroundColor: palette.surface, 
         borderWidth: 1,
         borderStyle: 'solid',
         borderColor: palette.border,
-        boxShadow: `0px 2px 8px rgba(0, 0, 0, 0.05)`,
+        boxShadow: `0px 1px 3px rgba(0,0,0,0.02), 0px 4px 12px rgba(0,0,0,0.04)`,
         ...style 
       }}
     >

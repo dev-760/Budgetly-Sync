@@ -25,7 +25,7 @@ export default function ProfileScreen() {
           <p className="text-[12px] mt-1.5" style={{ color: palette.muted }}>{t("studentTip")}</p>
         </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
           <div className="flex flex-col gap-4">
             {/* Profile Card */}
         <button
@@ -33,9 +33,9 @@ export default function ProfileScreen() {
           className="w-full flex flex-row items-center gap-4 rounded-[24px] border p-[18px] mb-5 active:opacity-70 transition-opacity text-left"
           style={{ backgroundColor: palette.surface, borderColor: palette.border }}
         >
-          <div className="h-[60px] w-[60px] rounded-[20px] flex items-center justify-center overflow-hidden" style={{ backgroundColor: palette.primary }}>
+          <div className="h-[60px] w-[60px] rounded-2xl flex items-center justify-center overflow-hidden" style={{ backgroundColor: palette.primary }}>
             {settings.profileImageUri ? (
-              <img src={settings.profileImageUri} alt="" className="w-full h-full object-cover rounded-[20px]" />
+              <img src={settings.profileImageUri} alt="" className="w-full h-full object-cover rounded-2xl" />
             ) : (
               <User size={28} color="white" />
             )}

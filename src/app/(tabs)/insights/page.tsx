@@ -75,9 +75,9 @@ export default function InsightsScreen() {
           </div>
         </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-8 gap-y-6 mt-[18px]">
-          <div className="lg:col-span-8 flex flex-col gap-4">
-            <Card className=" p-5" style={{ backgroundColor: palette.foreground, borderColor: palette.foreground, borderRadius: 23 }}>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6 mt-[18px]">
+          <div className="md:col-span-7 flex flex-col gap-4">
+            <Card className=" p-5" style={{ backgroundColor: palette.foreground, borderColor: palette.foreground, borderRadius: 16 }}>
           <div className="flex flex-row justify-between">
             <div>
               <p className="text-[#BFD0FF] text-[12px] font-bold">{label("Monthly balance", "Solde mensuel")}</p>
@@ -158,7 +158,7 @@ export default function InsightsScreen() {
         )}
       
           </div>
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          <div className="md:col-span-5 flex flex-col gap-4">
             <SectionTitle title={label("Compared with last month", "Comparé au mois dernier")} />
         <Card className="p-4">
           {prevIncome || prevSpending ? (

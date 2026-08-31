@@ -33,31 +33,29 @@ export default function TransactionsScreen() {
 
   return (
     <div className="flex flex-col h-full w-full max-w-[800px] mx-auto px-5" style={{ backgroundColor: palette.background }}>
-      {/* Header */}
-      <div className="flex flex-row items-center justify-end pt-3.5 mb-[18px]">
+      {/* Search & Header */}
+      <div className="flex flex-row items-center gap-3 pt-4 mb-[22px]">
+        <div 
+          className="flex-1 h-[50px] rounded-2xl border flex flex-row items-center px-3.5 gap-2"
+          style={{ backgroundColor: palette.surface, borderColor: palette.border }}
+        >
+          <Search size={20} color={palette.muted} />
+          <input
+            type="text"
+            placeholder={t("search")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 bg-transparent border-none outline-none text-[14px] h-full"
+            style={{ color: palette.foreground }}
+          />
+        </div>
         <button 
           onClick={() => router.push('/transaction?kind=expense')}
-          className="w-11 h-11 rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"
+          className="h-[50px] w-[50px] rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"
           style={{ backgroundColor: palette.primary }}
         >
           <Plus size={22} color="white" />
         </button>
-      </div>
-
-      {/* Search */}
-      <div 
-        className="h-[50px] rounded-2xl border flex flex-row items-center px-3.5 gap-2"
-        style={{ backgroundColor: palette.surface, borderColor: palette.border }}
-      >
-        <Search size={20} color={palette.muted} />
-        <input
-          type="text"
-          placeholder={t("search")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 bg-transparent border-none outline-none text-[14px] h-full"
-          style={{ color: palette.foreground }}
-        />
       </div>
 
       {/* Filters */}
