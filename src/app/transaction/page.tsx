@@ -54,7 +54,7 @@ function TransactionForm() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-background" style={{ backgroundColor: palette.background }}>
+    <div className="flex flex-col h-[100dvh] w-full max-w-[600px] mx-auto bg-background shadow-2xl lg:border-x" style={{ backgroundColor: palette.background }}>
       {/**/}
       <div className="h-[62px] flex flex-row items-center justify-between px-5 shrink-0">
         <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
