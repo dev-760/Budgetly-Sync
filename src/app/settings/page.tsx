@@ -14,7 +14,7 @@ import { LogOut } from 'lucide-react';
 export default function SettingsPage() {
   const router = useRouter();
   const { palette } = useThemeContext();
-  const { settings, setLanguage, setAppearancePreferences, toggleNotifications, clearLocalData, t } = useBudget();
+  const { settings, setLanguage, setAppearancePreferences, toggleNotifications, clearLocalData, setCigaretteMonthlyLimit, t } = useBudget();
   const isFrench = settings.language === 'fr';
   const label = (en: string, fr: string) => isFrench ? fr : en;
 
@@ -37,7 +37,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full w-full px-5 overflow-y-auto" style={{ backgroundColor: palette.background }}>
-      <div className="pt-0 pb-7">
+      <div className="pt-0 pb-32 md:pb-7">
         {/* Header */}
         <div className="h-[62px] flex flex-row items-center gap-3 shrink-0">
           <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl border flex items-center justify-center active:opacity-70 transition-opacity" style={{ backgroundColor: palette.surface, borderColor: palette.border }}>
@@ -84,7 +84,51 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        
+
+        {/* Private Tracker */}
+        <SectionTitle title={label("Private Tracker", "Suivi Privé")} />
+        <Card>
+          <div className="flex flex-row items-center gap-3 mb-4">
+            <RoundIcon icon={Shield} size={36} color={palette.primary} background="#EAF0FF" />
+            <div className="flex-1">
+              <p className="text-[14px] font-bold" style={{ color: palette.foreground }}>
+                {label("Personal Activity Tracker", "Suivi d'activité personnelle")}
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: palette.muted }}>
+                {label("Click the Budgetly logo to access your private tracker", "Cliquez sur le logo Budgetly pour accéder à votre suivi privé")}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="text-[12px] font-bold uppercase tracking-wide mb-1.5 block" style={{ color: palette.muted }}>
+                {label("Monthly Limit", "Limite mensuelle")}
+              </label>
+              <div className="flex flex-row gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  value={settings.cigaretteTracker?.monthlyLimit || 0}
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : undefined;
+                    setCigaretteMonthlyLimit(value);
+                  }}
+                  className="flex-1 px-3 py-2 rounded-xl border text-[14px]"
+                  style={{ borderColor: palette.border, backgroundColor: palette.background, color: palette.foreground }}
+                  placeholder={label("No limit", "Pas de limite")}
+                />
+              </div>
+            </div>
+            <button
+              onClick={() => router.push('/cigarette-tracker')}
+              className="py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity"
+              style={{ backgroundColor: palette.primary + '15', color: palette.primary }}
+            >
+              {label("Open Private Tracker", "Ouvrir le suivi privé")}
+            </button>
+          </div>
+        </Card>
+
         {/* Cloud Sync */}
         <SectionTitle title={label("Cloud Sync", "Synchronisation Cloud")} />
         <Card className="flex flex-col gap-3">
@@ -104,12 +148,12 @@ export default function SettingsPage() {
               <div className="flex-1 py-2.5 rounded-xl border flex items-center justify-center bg-gray-50">
                 <span className="text-[13px] font-bold text-gray-500">{label("Logged in", "Connecté")}</span>
               </div>
-              <button 
+              <button
                 onClick={() => {
                   storage.removeItem('budgetly_jwt');
                   window.location.reload();
                 }}
-                className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity flex items-center justify-center gap-2" 
+                className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity flex items-center justify-center gap-2"
                 style={{ backgroundColor: '#FEE2E2', color: '#EF4444' }}
               >
                 <LogOut size={16} />
@@ -117,9 +161,9 @@ export default function SettingsPage() {
               </button>
             </div>
           ) : (
-            <button 
-              onClick={() => router.push('/auth')} 
-              className="w-full mt-2 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity" 
+            <button
+              onClick={() => router.push('/auth')}
+              className="w-full mt-2 py-2.5 rounded-xl text-[13px] font-bold active:opacity-70 transition-opacity"
               style={{ backgroundColor: palette.primary, color: 'white' }}
             >
               {label("Set up Cloud Sync", "Configurer la synchronisation Cloud")}

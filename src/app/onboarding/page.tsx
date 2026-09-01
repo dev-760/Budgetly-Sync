@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wallet, GraduationCap, CalendarRange, PiggyBank, ArrowRight } from 'lucide-react';
-import { BrandMark, ProgressBar } from '@/components/budget-ui';
+import { BrandMark } from '@/components/budget-ui';
 import { Language } from '@/lib/budget-data';
 import { useBudget } from '@/lib/budget-store';
 import { useThemeContext } from '@/lib/theme-provider';
@@ -52,9 +52,7 @@ export default function OnboardingScreen() {
       </div>
 
       {/* Progress */}
-      <div className="mt-8 mb-6">
-        <ProgressBar value={(step + 1) / cards.length} color={palette.primary} />
-      </div>
+      
 
       {/* Artwork */}
       <div className="flex-1 flex flex-col items-center justify-center">

@@ -5,24 +5,26 @@ import { useBudgetStore } from '@/lib/budget-store';
 
 export function SyncWorker() {
   const syncToCloud = useBudgetStore((state) => state.syncToCloud);
+  const loadFromCloud = useBudgetStore((state) => state.loadFromCloud);
   const hydrated = useBudgetStore((state) => state.hydrated);
   const isInitialLoad = useRef(true);
 
   // Poll every 30 seconds for new changes from other devices (Pull)
   useEffect(() => {
     if (!hydrated) return;
-    
+
     // We already loaded from cloud on hydration (in budget-store initialize).
-    // Now we just poll periodically.
-    const interval = setInterval(() => {
-      // For a true LWW entity sync we'd pull and merge. 
-      // For this simple JSON blob sync, we rely mostly on manual pull or just pushing our state.
-      // Doing an automatic pull of the entire blob every 30s might overwrite local unsaved changes, 
-      // so in this simplified model we primarily PUSH changes automatically.
-    }, 30000);
+    // Now we poll periodically to sync changes from other devices.
+    const interval = setInterval(async () => {
+      try {
+        await loadFromCloud();
+      } catch (error) {
+        console.error('Failed to pull from cloud:', error);
+      }
+    }, 30000); // Poll every 30 seconds
 
     return () => clearInterval(interval);
-  }, [hydrated]);
+  }, [hydrated, loadFromCloud]);
 
   // Subscribe to Zustand store changes to automatically Push to cloud
   useEffect(() => {
@@ -37,7 +39,7 @@ export function SyncWorker() {
         isInitialLoad.current = false;
         return;
       }
-      
+
       // Simple deep equality check could go here, but for now we debounce and push
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {

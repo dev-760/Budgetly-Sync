@@ -11,8 +11,8 @@ import { FormattedDate } from '@/components/budget-ui';
 import { cn } from '@/lib/utils';
 
 const filters: { id: "all" | TransactionKind; label: "all" | "income" | "expense" }[] = [
-  { id: "all", label: "all" }, 
-  { id: "expense", label: "expense" }, 
+  { id: "all", label: "all" },
+  { id: "expense", label: "expense" },
   { id: "income", label: "income" }
 ];
 
@@ -23,9 +23,10 @@ export default function TransactionsScreen() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | TransactionKind>("all");
   const language = settings.language;
+  const label = (en: string, fr: string) => language === "fr" ? fr : en;
 
-  const filtered = useMemo(() => 
-    transactions.filter((item) => 
+  const filtered = useMemo(() =>
+    transactions.filter((item) =>
       (filter === "all" || item.kind === filter) &&
       `${item.title} ${categoryName(item.categoryId)}`.toLowerCase().includes(query.toLowerCase())
     ), [filter, query, transactions, categoryName]
@@ -35,7 +36,7 @@ export default function TransactionsScreen() {
     <div className="flex flex-col h-full w-full max-w-[800px] mx-auto px-5" style={{ backgroundColor: palette.background }}>
       {/* Search & Header */}
       <div className="flex flex-row items-center gap-3 pt-4 mb-[22px]">
-        <div 
+        <div
           className="flex-1 h-[50px] rounded-2xl border flex flex-row items-center px-3.5 gap-2"
           style={{ backgroundColor: palette.surface, borderColor: palette.border }}
         >
@@ -49,12 +50,13 @@ export default function TransactionsScreen() {
             style={{ color: palette.foreground }}
           />
         </div>
-        <button 
+        <button
           onClick={() => router.push('/transaction?kind=expense')}
-          className="h-[50px] w-[50px] rounded-2xl flex items-center justify-center active:opacity-70 transition-opacity"
-          style={{ backgroundColor: palette.primary }}
+          className="h-[50px] px-5 rounded-2xl flex items-center justify-center gap-2 shrink-0 active:opacity-70 transition-opacity"
+          style={{ backgroundColor: palette.primary, boxShadow: `0 4px 12px ${palette.primary}40` }}
         >
-          <Plus size={22} color="white" />
+          <Plus size={20} color="white" />
+          <span className="text-white text-[14px] font-bold hidden sm:block">{label("Add", "Ajouter")}</span>
         </button>
       </div>
 
@@ -70,7 +72,7 @@ export default function TransactionsScreen() {
               borderColor: palette.border
             }}
           >
-            <span 
+            <span
               className="text-[13px] font-bold"
               style={{ color: filter === item.id ? palette.primary : palette.muted }}
             >
@@ -81,9 +83,9 @@ export default function TransactionsScreen() {
       </div>
 
       {/* Transaction List */}
-      <div className="flex-1 overflow-y-auto pt-3.5 pb-7">
+      <div className="flex-1 overflow-y-auto pt-3.5 pb-32 md:pb-7">
         {filtered.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             icon={Search}
             title={t("noTransactions")}
             body={t("noTransactionsBody")}
@@ -97,7 +99,7 @@ export default function TransactionsScreen() {
                 className="min-h-[70px] rounded-[20px] border px-[13px] flex flex-row items-center gap-[11px] active:opacity-70 transition-opacity text-left"
                 style={{ backgroundColor: palette.surface, borderColor: palette.border }}
               >
-                <RoundIcon 
+                <RoundIcon
                   icon={item.kind === "income" ? ArrowDownLeft : ArrowUpRight}
                   color={item.kind === "income" ? palette.success : palette.error}
                   background={item.kind === "income" ? "#E7F7F1" : "#FDEBEC"}

@@ -44,7 +44,7 @@ export default function NotificationsScreen() {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto pt-3.5 pb-7">
+      <div className="flex-1 overflow-y-auto pt-3.5 pb-32 md:pb-7\">
         {notifications.length === 0 ? (
           <EmptyState icon={Bell} title={t("noNotifications")} body="" />
         ) : (
