@@ -19,16 +19,9 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isMounted) return;
 
-    // Don't redirect if we're already on the auth page
-    if (pathname === '/auth') {
+    // Auth is optional; keep onboarding as the first required flow.
+    if (pathname === '/auth' || pathname === '/onboarding') {
       setIsCheckingAuth(false);
-      return;
-    }
-
-    // Check if user is authenticated
-    const jwt = storage.getItem('budgetly_jwt');
-    if (!jwt) {
-      router.push('/auth');
       return;
     }
 
@@ -53,7 +46,7 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
   }
 
   if (!settings.onboardingComplete && pathname !== '/onboarding') {
-    return null; // Don't render layout until redirect happens
+    return null; // Don't render the app until onboarding is complete
   }
 
   return <>{children}</>;
