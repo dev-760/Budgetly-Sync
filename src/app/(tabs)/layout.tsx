@@ -71,7 +71,12 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
         {/* Bottom Tab Bar (Mobile) */}
         <nav
           className="md:hidden flex-shrink-0 w-full flex items-center justify-between px-2 pt-2 pb-[max(env(safe-area-inset-bottom,24px),24px)] border-t shadow-[0_-2px_8px_rgba(0,0,0,0.05)] z-50"
-          style={{ backgroundColor: palette.surface, borderColor: palette.border }}
+          style={{ 
+            backgroundColor: palette.surface, 
+            borderColor: palette.border,
+            boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
+            elevation: 5
+          }}
         >
           {screens.map((screen) => {
             const isActive = pathname === screen.name || (screen.name !== '/' && pathname.startsWith(screen.name));
@@ -81,10 +86,17 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
               <Link
                 key={screen.name}
                 href={screen.name}
-                className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl active:scale-95 transition-transform"
+                className="flex-1 flex flex-col items-center justify-center rounded-2xl active:scale-95 transition-transform"
+                style={{ 
+                  paddingVertical: 5,
+                  paddingHorizontal: 2,
+                  marginHorizontal: 0,
+                  marginVertical: 3,
+                  borderRadius: 14
+                }}
               >
                 <Icon
-                  size={26}
+                  size={25}
                   strokeWidth={isActive ? 2.5 : 2}
                   style={{ color: isActive ? palette.primary : palette.muted }}
                 />

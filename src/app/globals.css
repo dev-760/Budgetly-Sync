@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  /* Precision Fintech Palette - Light Theme */
-  --background: #f8f9ff;
-  --foreground: #121c2a;
-  --surface: #ffffff;
-  --border: #c3c5d7;
-  --primary: #003fb1;
-  --primary-light: #eff4ff;
-  --success: #006c49;
-  --success-light: #6cf8bb;
-  --warning: #895600;
-  --warning-light: #ffddb8;
-  --error: #ba1a1a;
-  --muted: #737686;
-  --error-light: #ffdad6;
-  --soft-primary: rgba(0, 63, 177, 0.1);
+  /* Budgetly Color Palette - Light Theme */
+  --background: #F6F8FC;
+  --foreground: #1F2937;
+  --surface: #FFFFFF;
+  --border: #E8ECF5;
+  --primary: #1A56DB;
+  --primary-light: #EAF0FF;
+  --success: #10B981;
+  --success-light: #E7F7F1;
+  --warning: #F59E0B;
+  --warning-light: #FFF3D8;
+  --error: #DE5A5A;
+  --error-light: #FDEBEC;
+  --muted: #6B7487;
+  --soft-primary: rgba(26, 86, 219, 0.15);
 }
 
 @theme inline {
@@ -45,20 +45,20 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Budgetly Color Palette - Dark Theme */
-    --background: #0F172A;
-    --foreground: #F1F5F9;
-    --surface: #1E293B;
-    --border: #334155;
-    --primary: #3B82F6;
-    --primary-light: rgba(59, 130, 246, 0.1);
-    --success: #10B981;
-    --success-light: rgba(16, 185, 129, 0.1);
-    --warning: #F59E0B;
-    --warning-light: rgba(245, 158, 11, 0.1);
-    --error: #EF4444;
-    --error-light: rgba(239, 68, 68, 0.1);
-    --muted: #94A3B8;
-    --soft-primary: rgba(59, 130, 246, 0.15);
+    --background: #101522;
+    --foreground: #ECEDEE;
+    --surface: #1E2022;
+    --border: #2C3852;
+    --primary: #1A56DB;
+    --primary-light: rgba(26, 86, 219, 0.15);
+    --success: #4ADE80;
+    --success-light: rgba(74, 222, 128, 0.15);
+    --warning: #FBBF24;
+    --warning-light: rgba(251, 191, 36, 0.15);
+    --error: #FF8F8F;
+    --error-light: rgba(255, 143, 143, 0.15);
+    --muted: #B6C0D4;
+    --soft-primary: rgba(26, 86, 219, 0.15);
   }
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAuthenticationOptions } from '@simplewebauthn/server';
 import { query } from '@/lib/db';
+import { storeChallenge } from '@/lib/passkey-challenges';
 
 const RP_ID = process.env.NEXT_PUBLIC_APP_URL 
   ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname 
@@ -53,6 +54,9 @@ export async function POST(request: NextRequest) {
         transports: passkey.transports,
       })),
     });
+
+    // Store the challenge
+    storeChallenge(options.challenge, normalizedUsername);
 
     return NextResponse.json(options);
 

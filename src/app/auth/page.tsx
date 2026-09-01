@@ -2,21 +2,33 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Lock, KeyRound, ArrowRight } from 'lucide-react';
+import { User, Lock, KeyRound, ArrowRight, Fingerprint } from 'lucide-react';
 import { Input, Button, Card, BrandLockup } from '@/components/budget-ui';
 import { useThemeContext } from '@/lib/theme-provider';
 import { storage } from '@/lib/storage';
+import { 
+  startRegistration, 
+  startAuthentication,
+  browserSupportsWebAuthn 
+} from '@simplewebauthn/browser';
 
 export default function AuthPage() {
   const router = useRouter();
   const { palette } = useThemeContext();
   const [isLogin, setIsLogin] = useState(true);
+  const [usePasskey, setUsePasskey] = useState(false);
   const [username, setUsername] = useState('');
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [passkeySupported, setPasskeySupported] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  React.useEffect(() => {
+    // Check if WebAuthn is supported
+    browserSupportsWebAuthn().then(setPasskeySupported);
+  }, []);
+
+  const handleTokenAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -59,6 +71,105 @@ export default function AuthPage() {
     }
   };
 
+  const handlePasskeyAuth = async () => {
+    if (!username.trim()) {
+      setError('Please enter your username first');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      if (isLogin) {
+        // Passkey login
+        const optionsResp = await fetch('/api/auth/passkey/login-options', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+
+        if (!optionsResp.ok) {
+          const data = await optionsResp.json();
+          setError(data.error || 'Failed to generate login options');
+          setLoading(false);
+          return;
+        }
+
+        const options = await optionsResp.json();
+        
+        const authResp = await startAuthentication(options);
+        
+        const verificationResp = await fetch('/api/auth/passkey/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            authenticationResponse: authResp,
+          }),
+        });
+
+        const verificationData = await verificationResp.json();
+
+        if (!verificationResp.ok) {
+          setError(verificationData.error || 'Passkey authentication failed');
+          setLoading(false);
+          return;
+        }
+
+        if (verificationData.jwt) {
+          storage.setItem('budgetly_jwt', verificationData.jwt);
+          router.push('/');
+        }
+      } else {
+        // Passkey registration (after initial account creation)
+        const optionsResp = await fetch('/api/auth/passkey/register-options', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+
+        if (!optionsResp.ok) {
+          const data = await optionsResp.json();
+          setError(data.error || 'Failed to generate registration options');
+          setLoading(false);
+          return;
+        }
+
+        const options = await optionsResp.json();
+        
+        const regResp = await startRegistration(options);
+        
+        const verificationResp = await fetch('/api/auth/passkey/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            registrationResponse: regResp,
+          }),
+        });
+
+        const verificationData = await verificationResp.json();
+
+        if (!verificationResp.ok) {
+          setError(verificationData.error || 'Passkey registration failed');
+          setLoading(false);
+          return;
+        }
+
+        if (verificationData.jwt) {
+          storage.setItem('budgetly_jwt', verificationData.jwt);
+          router.push('/');
+        }
+      }
+    } catch (err) {
+      console.error('Passkey error:', err);
+      setError('Passkey authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-4"
@@ -80,7 +191,7 @@ export default function AuthPage() {
           }}
         >
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2 tracking-tight" style={{ color: palette.foreground }}>
+            <h1 className="text-2xl font-extrabold mb-2 tracking-tight" style={{ color: palette.foreground }}>
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h1>
             <p className="text-sm font-medium" style={{ color: palette.muted }}>
@@ -88,45 +199,131 @@ export default function AuthPage() {
             </p>
           </div>
 
-          <form id="authForm" onSubmit={handleSubmit} className="space-y-5">
-            <Input
-              label="Username"
-              placeholder="e.g. hassan123"
-              value={username}
-              onChange={setUsername}
-            />
+          {/* Auth Method Toggle */}
+          {passkeySupported && (
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsePasskey(false);
+                  setError('');
+                }}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                  !usePasskey 
+                    ? 'bg-white dark:bg-gray-700 shadow-sm' 
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+                style={{ 
+                  color: !usePasskey ? palette.foreground : palette.muted 
+                }}
+              >
+                <KeyRound size={16} className="inline mr-2" />
+                Token
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsePasskey(true);
+                  setError('');
+                }}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                  usePasskey 
+                    ? 'bg-white dark:bg-gray-700 shadow-sm' 
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+                style={{ 
+                  color: usePasskey ? palette.foreground : palette.muted 
+                }}
+              >
+                <Fingerprint size={16} className="inline mr-2" />
+                Passkey
+              </button>
+            </div>
+          )}
 
-            {isLogin && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <Input
-                  label="Secure Token"
-                  placeholder="Paste your login token..."
-                  value={token}
-                  onChange={setToken}
-                  type="password"
-                />
-              </div>
-            )}
+          {usePasskey ? (
+            // Passkey Authentication
+            <div className="space-y-5">
+              <Input
+                label="Username"
+                placeholder="e.g. hassan123"
+                value={username}
+                onChange={setUsername}
+              />
 
-            {error && (
-              <div className="p-3 rounded-lg text-sm font-medium text-center animate-in fade-in zoom-in-95" style={{ backgroundColor: palette.errorLight, color: palette.error }}>
-                {error}
-              </div>
-            )}
+              {error && (
+                <div className="p-3 rounded-lg text-sm font-medium text-center animate-in fade-in zoom-in-95" style={{ backgroundColor: palette.errorLight, color: palette.error }}>
+                  {error}
+                </div>
+              )}
 
-            <Button
-              type="submit"
-              form="authForm"
-              size="large"
-              className="w-full mt-2 font-semibold shadow-sm"
-              disabled={loading || !username.trim()}
-            >
-              {loading ? 'Processing...' : isLogin ? 'Access Account' : 'Generate Secure Token'}
-            </Button>
-          </form>
+              <Button
+                onClick={handlePasskeyAuth}
+                size="large"
+                className="w-full mt-2 font-semibold shadow-sm"
+                disabled={loading || !username.trim()}
+              >
+                {loading ? 'Processing...' : isLogin ? 'Sign in with Passkey' : 'Register Passkey'}
+              </Button>
+
+              {!isLogin && (
+                <div className="mt-4 p-4 rounded-xl border" style={{ backgroundColor: palette.primaryLight, borderColor: palette.softPrimary }}>
+                  <p className="text-sm" style={{ color: palette.foreground }}>
+                    <strong>Setup required:</strong> You must first create an account with a token, then you can register a passkey for future logins.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setUsePasskey(false)}
+                    className="mt-3 text-sm font-medium underline"
+                    style={{ color: palette.primary }}
+                  >
+                    Switch to Token registration
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Token Authentication
+            <form id="authForm" onSubmit={handleTokenAuth} className="space-y-5">
+              <Input
+                label="Username"
+                placeholder="e.g. hassan123"
+                value={username}
+                onChange={setUsername}
+              />
+
+              {isLogin && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <Input
+                    label="Secure Token"
+                    placeholder="Paste your login token..."
+                    value={token}
+                    onChange={setToken}
+                    type="password"
+                  />
+                </div>
+              )}
+
+              {error && (
+                <div className="p-3 rounded-lg text-sm font-medium text-center animate-in fade-in zoom-in-95" style={{ backgroundColor: palette.errorLight, color: palette.error }}>
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                form="authForm"
+                size="large"
+                className="w-full mt-2 font-semibold shadow-sm"
+                disabled={loading || !username.trim()}
+              >
+                {loading ? 'Processing...' : isLogin ? 'Access Account' : 'Generate Secure Token'}
+              </Button>
+            </form>
+          )}
 
           {/* Registration Info Box */}
-          {!isLogin && (
+          {!isLogin && !usePasskey && (
             <div className="mt-8 p-5 rounded-xl border animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ backgroundColor: palette.primaryLight, borderColor: palette.softPrimary }}>
               <div className="flex items-center gap-2 mb-3">
                 <KeyRound size={18} style={{ color: palette.primary }} />
@@ -159,6 +356,7 @@ export default function AuthPage() {
             onClick={() => {
               setIsLogin(!isLogin);
               setError('');
+              setUsePasskey(false);
             }}
             className="text-sm font-medium transition-opacity hover:opacity-70 inline-flex items-center gap-1.5"
             style={{ color: palette.muted }}

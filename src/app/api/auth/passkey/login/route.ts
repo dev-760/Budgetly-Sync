@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { query } from '@/lib/db';
 import { signJWT } from '@/lib/auth';
+import { getChallenge, deleteChallenge } from '@/lib/passkey-challenges';
 
 const RP_ID = process.env.NEXT_PUBLIC_APP_URL 
   ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname 
@@ -48,10 +49,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Retrieve the challenge from storage
+    const challengeData = getChallenge(authenticationResponse.response?.userChallenge || '');
+    if (!challengeData) {
+      return NextResponse.json(
+        { error: 'Invalid or expired challenge' },
+        { status: 400 }
+      );
+    }
+
     // Verify authentication response
     const verification = await verifyAuthenticationResponse({
       response: authenticationResponse,
-      expectedChallenge: authenticationResponse.response?.userChallenge || 'default-challenge',
+      expectedChallenge: challengeData.challenge,
       expectedOrigin: ORIGIN,
       expectedRPID: RP_ID,
       credential: {
@@ -80,6 +90,9 @@ export async function POST(request: NextRequest) {
       'UPDATE users SET passkeys = $1 WHERE username = $2',
       [JSON.stringify(updatedPasskeys), normalizedUsername]
     );
+
+    // Delete the used challenge
+    deleteChallenge(challengeData.challenge);
 
     // Generate JWT
     const jwt = await signJWT(normalizedUsername);

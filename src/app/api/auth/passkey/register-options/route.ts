@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { query } from '@/lib/db';
+import { storeChallenge } from '@/lib/passkey-challenges';
 
 const RP_ID = process.env.NEXT_PUBLIC_APP_URL 
   ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname 
@@ -56,8 +57,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Store the challenge temporarily (in a real app, you'd use Redis or similar)
-    // For now, we'll return it and expect the client to send it back
+    // Store the challenge
+    storeChallenge(options.challenge, normalizedUsername);
     
     return NextResponse.json(options);
 

@@ -12,6 +12,7 @@ generator client {
 
 model User {
   username    String    @id
+  token       String?   // Store the actual token for passkey registration
   tokenHash   String    @map("token_hash")
   passkeys    String    @default("[]")
   syncData    String?   @map("sync_data") // Stores the JSON string of BudgetData

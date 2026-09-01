@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { User, ChevronRight, Bell, Banknote, Flag, RefreshCw, RotateCcw } from 'lucide-react';
+import { User, ChevronRight, Bell, Banknote, Flag, RefreshCw, RotateCcw, LogOut } from 'lucide-react';
 import { BrandLockup, Card, EmptyState, RoundIcon, SectionTitle } from '@/components/budget-ui';
 import { Language } from '@/lib/budget-data';
 import { useBudget } from '@/lib/budget-store';
@@ -10,7 +10,7 @@ import { useThemeContext } from '@/lib/theme-provider';
 import { cn } from '@/lib/utils';
 
 export default function ProfileScreen() {
-  const { settings, goals, recurring, setLanguage, toggleNotifications, clearLocalData, t } = useBudget();
+  const { settings, goals, recurring, setLanguage, toggleNotifications, clearLocalData, logout, t } = useBudget();
   const { palette, colorScheme } = useThemeContext();
   const router = useRouter();
   const profileName = settings.displayName || (settings.language === "fr" ? "Ton profil" : "Your profile");
@@ -166,6 +166,19 @@ export default function ProfileScreen() {
               <span className="text-[13px] font-bold" style={{ color: palette.error }}>{t("clearLocalData")}</span>
             </button>
 
+            {/* Logout */}
+            <button
+              onClick={() => { 
+                if (confirm(settings.language === "fr" ? "Voulez-vous vraiment vous déconnecter ?" : "Are you sure you want to log out?")) {
+                  logout();
+                  router.push('/auth');
+                }
+              }}
+              className="mt-2 mx-auto flex flex-row items-center gap-1.5 p-3 active:opacity-70 transition-opacity"
+            >
+              <LogOut size={18} color={palette.muted} />
+              <span className="text-[13px] font-bold" style={{ color: palette.muted }}>{settings.language === "fr" ? "Déconnexion" : "Log out"}</span>
+            </button>
 
           </div>
         </div>

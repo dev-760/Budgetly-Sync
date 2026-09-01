@@ -95,6 +95,7 @@ type BudgetActions = {
   toggleNotifications: () => void;
   markNotificationsRead: () => void;
   clearLocalData: () => void;
+  logout: () => void;
   upsertTransfer: (input: Omit<BucketTransfer, "id" | "createdAt"> & { id?: string }) => boolean;
   removeTransfer: (id: string) => void;
   upsertLoan: (loan: Omit<Loan, "id"> & { id?: string }) => boolean;
@@ -359,6 +360,11 @@ export const useBudgetStore = create<BudgetStore>()(
       markNotificationsRead: () => set((state) => ({ notifications: state.notifications.map((item) => ({ ...item, isRead: true })) })),
       
       clearLocalData: () => set(() => ({ ...createDefaultData() })),
+
+      logout: () => {
+        storage.removeItem('budgetly_jwt');
+        set(() => ({ ...createDefaultData() }));
+      },
 
       upsertTransfer: (input) => {
         const state = get();

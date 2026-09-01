@@ -31,9 +31,9 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const visualThemes: Record<VisualThemeId, { name: string; primary: string; primaryLight: string; primaryLightDark: string; soft: string }> = {
-  ocean: { name: "Ocean Blue", primary: "#3B82F6", primaryLight: "#EAF0FF", primaryLightDark: "rgba(59, 130, 246, 0.1)", soft: "#EAF0FF" },
-  violet: { name: "Deep Violet", primary: "#7C3AED", primaryLight: "#EDE9FE", primaryLightDark: "rgba(124, 58, 237, 0.1)", soft: "#EDE9FE" },
-  sage: { name: "Emerald Green", primary: "#10B981", primaryLight: "#D1FAE5", primaryLightDark: "rgba(16, 185, 129, 0.1)", soft: "#D1FAE5" },
+  ocean: { name: "Ocean Blue", primary: "#1A56DB", primaryLight: "#EAF0FF", primaryLightDark: "rgba(26, 86, 219, 0.15)", soft: "#EAF0FF" },
+  violet: { name: "Deep Violet", primary: "#7C3AED", primaryLight: "#EDE9FE", primaryLightDark: "rgba(124, 58, 237, 0.15)", soft: "#EDE9FE" },
+  sage: { name: "Emerald Green", primary: "#10B981", primaryLight: "#D1FAE5", primaryLightDark: "rgba(16, 185, 129, 0.15)", soft: "#D1FAE5" },
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

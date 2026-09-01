@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatMoney, formatDate } from '@/lib/budget-data';
 import { useThemeContext } from '@/lib/theme-provider';
@@ -25,14 +25,15 @@ export function BrandMark({ size = 42, radius = 14 }: { size?: number; radius?: 
 export function BrandLockup({ compact = false }: { compact?: boolean }) {
   const { palette } = useThemeContext();
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2.5">
       <BrandMark size={compact ? 34 : 40} radius={compact ? 11 : 13} />
       <span 
-        className={cn(
-          "font-bold",
-          compact ? "text-lg" : "text-xl"
-        )}
-        style={{ color: palette.foreground }}
+        className="font-extrabold"
+        style={{ 
+          color: palette.foreground,
+          fontSize: compact ? 18 : 22,
+          letterSpacing: -0.7
+        }}
       >
         Budgetly
       </span>
@@ -45,14 +46,15 @@ export function Card({ children, className, style }: { children: React.ReactNode
   const { palette } = useThemeContext();
   return (
     <div 
-      className={cn("p-5", className)}
+      className={cn("", className)}
       style={{ 
-        borderRadius: 16,
+        borderRadius: 22,
+        padding: 16,
         backgroundColor: palette.surface, 
         borderWidth: 1,
         borderStyle: 'solid',
         borderColor: palette.border,
-        boxShadow: `0px 1px 3px rgba(0,0,0,0.02), 0px 4px 12px rgba(0,0,0,0.04)`,
+        boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
         ...style 
       }}
     >
@@ -65,20 +67,23 @@ export function Card({ children, className, style }: { children: React.ReactNode
 export function SectionTitle({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
   const { palette } = useThemeContext();
   return (
-    <div className="flex items-center justify-between mt-6 mb-3">
+    <div className="flex items-center justify-between" style={{ marginTop: 24, marginBottom: 12 }}>
       <h3 
-        className="text-[18px] font-bold tracking-[-0.015em]" 
-        style={{ color: palette.foreground }}
+        className="text-[18px] font-extrabold" 
+        style={{ color: palette.foreground, letterSpacing: -0.3 }}
       >
         {title}
       </h3>
       {action && onPress ? (
         <button
           onClick={onPress}
-          className="px-3 py-1.5 rounded-xl text-[12px] font-extrabold active:opacity-65 transition-opacity"
+          className="text-[12px] font-extrabold active:opacity-65 transition-opacity"
           style={{ 
             backgroundColor: '#EEF3FF',
-            color: palette.primary 
+            color: palette.primary,
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            borderRadius: 12
           }}
         >
           {action}
@@ -92,19 +97,19 @@ export function SectionTitle({ title, action, onPress }: { title: string; action
 export function ProgressBar({ value, color, trackColor }: { value: number; color?: string; trackColor?: string }) {
   const { palette } = useThemeContext();
   const activeColor = color || palette.primary;
-  const activeTrack = trackColor || '#F3F4F6';
+  const activeTrack = trackColor || palette.border;
   const percentage = Math.min(Math.max(value, 0), 1) * 100;
 
   return (
     <div 
-      className="h-1.5 rounded-full overflow-hidden"
+      className="h-2 rounded-full overflow-hidden"
       style={{ backgroundColor: activeTrack }}
     >
       <div 
         className="h-full rounded-full transition-all duration-300 ease-out"
         style={{ 
           width: `${percentage}%`,
-          backgroundImage: `linear-gradient(90deg, ${activeColor}, ${activeColor}dd)` 
+          backgroundColor: activeColor
         }}
       />
     </div>
@@ -122,7 +127,7 @@ export function RoundIcon({ icon: Icon, size = 34, color, background }: { icon: 
         backgroundColor: background 
       }}
     >
-      <Icon size={size * 0.5} color={color} />
+      <Icon size={Math.round(size * 0.48)} color={color} strokeWidth={2} />
     </div>
   );
 }
@@ -155,7 +160,7 @@ export function MoneyText({
   return (
     <span 
       className={cn("font-extrabold tabular-nums", className)} 
-      style={{ color, ...style }}
+      style={{ color, fontWeight: 800, ...style }}
     >
       {formatted}
     </span>
@@ -166,9 +171,9 @@ export function MoneyText({
 export function EmptyState({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
   const { palette } = useThemeContext();
   return (
-    <div className="flex flex-col items-center py-8 px-7 min-h-[120px]">
+    <div className="flex flex-col items-center" style={{ paddingVertical: 32, paddingHorizontal: 28, minHeight: 120 }}>
       <RoundIcon icon={Icon} size={52} color={palette.primary} background="#EAF0FF" />
-      <h3 className="mt-4 text-[17px] font-bold text-center" style={{ color: palette.foreground }}>
+      <h3 className="mt-4 text-[17px] font-extrabold text-center" style={{ color: palette.foreground }}>
         {title}
       </h3>
       <p className="mt-2 text-[14px] leading-[22px] text-center max-w-[280px]" style={{ color: palette.muted }}>
@@ -305,4 +310,86 @@ export function FormattedDate({ date, language }: { date: string; language: "en"
       {formatDate(date, language)}
     </span>
   );
-}export const defaultIcons: Record<string, any> = {};
+}
+
+// Finance Board Strip component
+export function FinanceBoardStrip({ 
+  netWorth, 
+  buckets, 
+  language, 
+  t,
+  onPress 
+}: { 
+  netWorth: number; 
+  buckets: Array<{ id: string; balance: number; color: string }>; 
+  language: "en" | "fr";
+  t: (key: string) => string;
+  onPress?: () => void;
+}) {
+  const { palette } = useThemeContext();
+  const isFrench = language === "fr";
+  
+  return (
+    <button
+      onClick={onPress}
+      className="w-full text-left active:opacity-65 transition-opacity"
+      style={{
+        marginTop: 16,
+        backgroundColor: palette.foreground,
+        borderRadius: 24,
+        padding: 22,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+      }}
+    >
+      <div className="flex flex-row justify-between items-start mb-4">
+        <div>
+          <p className="text-[17px] font-bold" style={{ color: '#FFFFFF' }}>
+            {isFrench ? "Vue financière" : "Finance board"}
+          </p>
+          <p className="text-[13px] mt-1" style={{ color: '#8B94A7' }}>
+            {isFrench ? "Comptes et engagements" : "Accounts & commitments"}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: '#FFFFFF' }}>
+            {isFrench ? "Valeur nette" : "Net worth"}
+          </p>
+          <p className="text-[19px] font-extrabold tabular-nums" style={{ color: '#FFFFFF' }}>
+            {formatMoney(netWorth, language)}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-row gap-3.5 mt-4.5">
+        {buckets.map((bucket) => (
+          <div 
+            key={bucket.id} 
+            className="flex-1 flex flex-row items-center gap-3"
+            style={{ 
+              backgroundColor: 'rgba(255,255,255,0.06)',
+              padding: 12,
+              borderRadius: 16
+            }}
+          >
+            <RoundIcon
+              icon={Wallet}
+              size={30}
+              color={bucket.color}
+              background={bucket.id === "cash" ? "rgba(22, 167, 123, 0.15)" : "rgba(26, 86, 219, 0.15)"}
+            />
+            <div>
+              <p className="text-[13px] font-bold" style={{ color: '#DDE6FF' }}>
+                {bucket.id === "cash" ? t("cash") : t("card")}
+              </p>
+              <p className="text-[15px] font-extrabold tabular-nums mt-0.5" style={{ color: '#FFFFFF' }}>
+                {formatMoney(bucket.balance, language)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </button>
+  );
+}
+
+export const defaultIcons: Record<string, any> = {};

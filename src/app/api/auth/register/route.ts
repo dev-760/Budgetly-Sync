@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
 
     // Create user
     await query(
-      'INSERT INTO users (username, token_hash, passkeys, sync_data) VALUES ($1, $2, $3, $4)',
-      [normalizedUsername, tokenHash, '[]', null]
+      'INSERT INTO users (username, token, token_hash, passkeys, sync_data) VALUES ($1, $2, $3, $4, $5)',
+      [normalizedUsername, token, tokenHash, '[]', null]
     );
 
     // Generate JWT
