@@ -9,12 +9,19 @@ export function SyncWorker() {
   const hydrated = useBudgetStore((state) => state.hydrated);
   const isInitialLoad = useRef(true);
 
-  // Poll every 30 seconds for new changes from other devices (Pull)
+  // Initial load from cloud on hydration
   useEffect(() => {
     if (!hydrated) return;
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      loadFromCloud().catch(err => console.error('Initial load failed:', err));
+    }
+  }, [hydrated, loadFromCloud]);
 
-    // We already loaded from cloud on hydration (in budget-store initialize).
-    // Now we poll periodically to sync changes from other devices.
+  // Poll every 30 seconds for new changes from other devices (Pull)
+  useEffect(() => {
+    if (!hydrated || isInitialLoad.current) return;
+
     const interval = setInterval(async () => {
       try {
         await loadFromCloud();
@@ -28,23 +35,16 @@ export function SyncWorker() {
 
   // Subscribe to Zustand store changes to automatically Push to cloud
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || isInitialLoad.current) return;
 
     // Debounce the sync to avoid spamming the API on every keystroke
     let timeoutId: NodeJS.Timeout;
 
-    const unsubscribe = useBudgetStore.subscribe((state, prevState) => {
-      // Don't push immediately on hydration
-      if (isInitialLoad.current) {
-        isInitialLoad.current = false;
-        return;
-      }
-
-      // Simple deep equality check could go here, but for now we debounce and push
+    const unsubscribe = useBudgetStore.subscribe((state) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        state.syncToCloud();
-      }, 3000); // 3 seconds debounce
+        state.syncToCloud().catch(err => console.error('Sync failed:', err));
+      }, 2000); // 2 seconds debounce
     });
 
     return () => {
