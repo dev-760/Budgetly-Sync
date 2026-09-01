@@ -4,10 +4,18 @@ import { query } from '@/lib/db';
 import { signJWT } from '@/lib/auth';
 import { getChallenge, deleteChallenge } from '@/lib/passkey-challenges';
 
-const RP_ID = process.env.NEXT_PUBLIC_APP_URL 
-  ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname 
-  : 'localhost';
-const ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const ORIGIN = (request: NextRequest) => request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+function getClientDataChallenge(response: { clientDataJSON?: string } | undefined): string | undefined {
+  if (!response?.clientDataJSON) return undefined;
+
+  try {
+    const parsed = JSON.parse(Buffer.from(response.clientDataJSON, 'base64url').toString('utf8')) as { challenge?: string };
+    return parsed.challenge;
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,8 +47,15 @@ export async function POST(request: NextRequest) {
     const user = userResult.rows[0];
     const passkeys = JSON.parse(user.passkeys || '[]');
 
-    // Retrieve the challenge from storage
-    const challengeData = getChallenge(registrationResponse.response?.userChallenge || '');
+    const challenge = getClientDataChallenge(registrationResponse.response);
+    if (!challenge) {
+      return NextResponse.json(
+        { error: 'Invalid registration response' },
+        { status: 400 }
+      );
+    }
+
+    const challengeData = getChallenge(challenge);
     if (!challengeData) {
       return NextResponse.json(
         { error: 'Invalid or expired challenge' },
@@ -48,11 +63,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const origin = ORIGIN(request);
+    const rpId = new URL(origin).hostname;
+
     const verification = await verifyRegistrationResponse({
       response: registrationResponse,
       expectedChallenge: challengeData.challenge,
-      expectedOrigin: ORIGIN,
-      expectedRPID: RP_ID,
+      expectedOrigin: origin,
+      expectedRPID: rpId,
     });
 
     if (!verification.verified || !verification.registrationInfo) {

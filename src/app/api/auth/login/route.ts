@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { hashToken, signJWT } from '@/lib/auth';
-
-// Simple in-memory storage for development without database
-// Import the same mock storage from register route
-const mockUsers = new Map<string, { tokenHash: string; token: string }>();
-
-// Export this to be used by register route
-export { mockUsers };
+import { mockUsers } from '@/lib/mock-storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +19,7 @@ export async function POST(request: NextRequest) {
     const tokenHash = hashToken(token);
 
     // Check if using mock storage (no database)
-    if (!query.toString().includes('pool')) {
+    if (!process.env.DATABASE_URL) {
       const user = mockUsers.get(normalizedUsername);
       if (!user || user.tokenHash !== tokenHash) {
         return NextResponse.json(
@@ -34,7 +28,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate JWT
       const jwt = await signJWT(normalizedUsername);
 
       return NextResponse.json({

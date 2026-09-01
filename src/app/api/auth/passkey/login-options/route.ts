@@ -3,9 +3,7 @@ import { generateAuthenticationOptions } from '@simplewebauthn/server';
 import { query } from '@/lib/db';
 import { storeChallenge } from '@/lib/passkey-challenges';
 
-const RP_ID = process.env.NEXT_PUBLIC_APP_URL 
-  ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname 
-  : 'localhost';
+const getOrigin = (request: NextRequest) => request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,6 +18,8 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedUsername = username.toLowerCase();
+    const origin = getOrigin(request);
+    const rpId = new URL(origin).hostname;
 
     // Get user's passkeys
     const userResult = await query(
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Generate authentication options
     const options = await generateAuthenticationOptions({
-      rpID: RP_ID,
+      rpID: rpId,
       userVerification: 'preferred',
       allowCredentials: passkeys.map((passkey: any) => ({
         id: passkey.id,

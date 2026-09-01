@@ -6,10 +6,10 @@ import { User, Lock, KeyRound, ArrowRight, Fingerprint } from 'lucide-react';
 import { Input, Button, Card, BrandLockup } from '@/components/budget-ui';
 import { useThemeContext } from '@/lib/theme-provider';
 import { storage } from '@/lib/storage';
-import { 
-  startRegistration, 
+import {
+  startRegistration,
   startAuthentication,
-  browserSupportsWebAuthn 
+  browserSupportsWebAuthn
 } from '@simplewebauthn/browser';
 
 export default function AuthPage() {
@@ -35,7 +35,7 @@ export default function AuthPage() {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const body = isLogin 
+      const body = isLogin
         ? { username, token }
         : { username };
 
@@ -77,6 +77,11 @@ export default function AuthPage() {
       return;
     }
 
+    if (!passkeySupported) {
+      setError('This browser does not support passkeys.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -97,9 +102,9 @@ export default function AuthPage() {
         }
 
         const options = await optionsResp.json();
-        
+
         const authResp = await startAuthentication(options);
-        
+
         const verificationResp = await fetch('/api/auth/passkey/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -137,9 +142,9 @@ export default function AuthPage() {
         }
 
         const options = await optionsResp.json();
-        
+
         const regResp = await startRegistration(options);
-        
+
         const verificationResp = await fetch('/api/auth/passkey/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -171,23 +176,23 @@ export default function AuthPage() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex flex-col items-center justify-center p-4"
       style={{ backgroundColor: palette.background }}
     >
       <div className="w-full max-w-md flex flex-col gap-8">
-        
+
         {/* Brand Header */}
         <div className="flex justify-center items-center">
           <BrandLockup />
         </div>
 
         {/* Main Auth Card */}
-        <Card 
-          className="w-full p-8 shadow-xl" 
-          style={{ 
+        <Card
+          className="w-full p-8 shadow-xl"
+          style={{
             boxShadow: `0 20px 40px -10px ${palette.border}`,
-            borderColor: palette.border 
+            borderColor: palette.border
           }}
         >
           <div className="text-center mb-8">
@@ -208,13 +213,12 @@ export default function AuthPage() {
                   setUsePasskey(false);
                   setError('');
                 }}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                  !usePasskey 
-                    ? 'bg-white dark:bg-gray-700 shadow-sm' 
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${!usePasskey
+                    ? 'bg-white dark:bg-gray-700 shadow-sm'
                     : 'text-gray-500 dark:text-gray-400'
-                }`}
-                style={{ 
-                  color: !usePasskey ? palette.foreground : palette.muted 
+                  }`}
+                style={{
+                  color: !usePasskey ? palette.foreground : palette.muted
                 }}
               >
                 <KeyRound size={16} className="inline mr-2" />
@@ -226,13 +230,12 @@ export default function AuthPage() {
                   setUsePasskey(true);
                   setError('');
                 }}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                  usePasskey 
-                    ? 'bg-white dark:bg-gray-700 shadow-sm' 
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${usePasskey
+                    ? 'bg-white dark:bg-gray-700 shadow-sm'
                     : 'text-gray-500 dark:text-gray-400'
-                }`}
-                style={{ 
-                  color: usePasskey ? palette.foreground : palette.muted 
+                  }`}
+                style={{
+                  color: usePasskey ? palette.foreground : palette.muted
                 }}
               >
                 <Fingerprint size={16} className="inline mr-2" />

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const normalizedUsername = username.toLowerCase();
 
     // Check if using mock storage (no database)
-    if (!query.toString().includes('pool')) {
+    if (!process.env.DATABASE_URL) {
       if (mockUsers.has(normalizedUsername)) {
         return NextResponse.json(
           { error: 'Username already taken.' },
@@ -26,14 +26,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate token and hash
       const token = generateToken();
       const tokenHash = hashToken(token);
 
-      // Store in mock storage
       mockUsers.set(normalizedUsername, { tokenHash, token });
 
-      // Generate JWT
       const jwt = await signJWT(normalizedUsername);
 
       return NextResponse.json({

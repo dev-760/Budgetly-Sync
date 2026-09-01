@@ -3,11 +3,8 @@ import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { query } from '@/lib/db';
 import { storeChallenge } from '@/lib/passkey-challenges';
 
-const RP_ID = process.env.NEXT_PUBLIC_APP_URL 
-  ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname 
-  : 'localhost';
 const RP_NAME = 'Budgetly';
-const ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const getOrigin = (request: NextRequest) => request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +19,8 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedUsername = username.toLowerCase();
+    const origin = getOrigin(request);
+    const rpId = new URL(origin).hostname;
 
     // Check if user exists
     const userResult = await query(
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Generate registration options
     const options = await generateRegistrationOptions({
       rpName: RP_NAME,
-      rpID: RP_ID,
+      rpID: rpId,
       userID: normalizedUsername,
       userName: normalizedUsername,
       // Don't prompt users for additional information about the authenticator
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Store the challenge
     storeChallenge(options.challenge, normalizedUsername);
-    
+
     return NextResponse.json(options);
 
   } catch (error) {
