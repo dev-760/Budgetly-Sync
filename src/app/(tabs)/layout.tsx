@@ -74,8 +74,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
           style={{ 
             backgroundColor: palette.surface, 
             borderColor: palette.border,
-            boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
-            elevation: 5
+            boxShadow: '0 -2px 8px rgba(0,0,0,0.05)'
           }}
         >
           {screens.map((screen) => {
@@ -86,12 +85,9 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
               <Link
                 key={screen.name}
                 href={screen.name}
-                className="flex-1 flex flex-col items-center justify-center rounded-2xl active:scale-95 transition-transform"
+                className="flex-1 flex flex-col items-center justify-center rounded-2xl active:scale-95 transition-transform py-1 px-0.5"
                 style={{ 
-                  paddingVertical: 5,
-                  paddingHorizontal: 2,
-                  marginHorizontal: 0,
-                  marginVertical: 3,
+                  margin: '3px 0',
                   borderRadius: 14
                 }}
               >

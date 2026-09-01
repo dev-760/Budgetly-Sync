@@ -81,8 +81,7 @@ export function SectionTitle({ title, action, onPress }: { title: string; action
           style={{ 
             backgroundColor: '#EEF3FF',
             color: palette.primary,
-            paddingVertical: 6,
-            paddingHorizontal: 12,
+            padding: '6px 12px',
             borderRadius: 12
           }}
         >
@@ -171,7 +170,7 @@ export function MoneyText({
 export function EmptyState({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
   const { palette } = useThemeContext();
   return (
-    <div className="flex flex-col items-center" style={{ paddingVertical: 32, paddingHorizontal: 28, minHeight: 120 }}>
+    <div className="flex flex-col items-center" style={{ padding: '32px 28px', minHeight: 120 }}>
       <RoundIcon icon={Icon} size={52} color={palette.primary} background="#EAF0FF" />
       <h3 className="mt-4 text-[17px] font-extrabold text-center" style={{ color: palette.foreground }}>
         {title}

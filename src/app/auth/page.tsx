@@ -25,7 +25,7 @@ export default function AuthPage() {
 
   React.useEffect(() => {
     // Check if WebAuthn is supported
-    browserSupportsWebAuthn().then(setPasskeySupported);
+    setPasskeySupported(browserSupportsWebAuthn());
   }, []);
 
   const handleTokenAuth = async (e: React.FormEvent) => {
@@ -258,7 +258,7 @@ export default function AuthPage() {
               )}
 
               <Button
-                onClick={handlePasskeyAuth}
+                onPress={handlePasskeyAuth}
                 size="large"
                 className="w-full mt-2 font-semibold shadow-sm"
                 disabled={loading || !username.trim()}

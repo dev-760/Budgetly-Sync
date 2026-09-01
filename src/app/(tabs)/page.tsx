@@ -119,7 +119,7 @@ export default function HomePage() {
               netWorth={finance.netWorth}
               buckets={buckets}
               language={language}
-              t={t}
+              t={(key: string) => t(key as any)}
               onPress={() => router.push('/finance')}
             />
 
