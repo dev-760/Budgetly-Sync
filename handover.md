@@ -2,7 +2,7 @@
 
 ## Technical Stack
 - **Framework:** Next.js 14+ (App Router)
-- **UI & Styling:** Tailwind CSS 4, Lucide React (Icons)
+- **UI & Styling:** Tailwind CSS 4, V2 UI Design (Shadcn UI), Lucide React (Icons)
 - **State Management:** Zustand (with LocalStorage persistence for Offline-First capability)
 - **Database ORM:** Prisma Client & Prisma Accelerate (`@prisma/client`, `@prisma/extension-accelerate`)
 - **Database Engine:** PostgreSQL (Optimized for Vercel Prisma Postgres)

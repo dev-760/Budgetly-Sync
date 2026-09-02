@@ -2,14 +2,10 @@ import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-provider";
-import { LayoutWrapper } from "@/components/layout-wrapper";
-import { SyncWorker } from "@/components/sync-worker";
+import { AppShell } from "@/components/app-shell";
+import { OnboardingCheck } from "@/components/auth-check";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: "Budgetly - Personal Finance for Students",
@@ -24,12 +20,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className={cn("min-h-full", inter.className)}>
+      <body className={cn("min-h-full")}>
         <ThemeProvider>
-          <SyncWorker />
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
+          <OnboardingCheck>
+            <AppShell>
+              {children}
+            </AppShell>
+          </OnboardingCheck>
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

@@ -2,6 +2,8 @@
 
 Budgetly is a modern, offline-first personal finance application built for students. It offers zero-latency tracking, comprehensive budget insights, and automatic background synchronization across all your devices.
 
+> **Note:** The application has been upgraded to the **V2 UI design**, featuring refined layouts, fluid animations, and a polished user interface.
+
 For a detailed breakdown of the technical stack and architecture, please see the [Technical Handover Document](./handover.md).
 
 ## 🚀 Hosting on Vercel (Prisma Postgres Integration)
